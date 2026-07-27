@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "manifest_type": "installation-manifest",
-  "pack_id": "magewell-douyin-intelligence",
+  "pack_id": "douyin-intelligence",
   "supported_platform": "windows",
   "python_requirement": ">=3.12",
   "installation_policy": "plan-first-and-confirm-per-dependency",

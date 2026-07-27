@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate that six-round status records truthfully describe a run."""
+"""Validate that six-round status records truthfully describe a Douyin run."""
 
 from __future__ import annotations
 
@@ -11,7 +11,15 @@ ROUNDS = ("01-opencli", "02-last30days", "03-last30days-cn", "04-browser-harness
 ALLOWED = {"success", "partial_success", "awaiting_human", "blocked_user_action", "blocked_dependency", "compliant_skip", "failed"}
 BLOCKING = {"awaiting_human", "blocked_user_action", "blocked_dependency", "failed"}
 NO_FULL_SUCCESS = BLOCKING | {"partial_success"}
-REQUIRED_MANIFEST_FIELDS = ("round", "skill", "status", "timestamp", "target", "result")
+REQUIRED_MANIFEST_FIELDS = ("round", "skill", "task_id", "status", "timestamp", "target", "result")
+REQUIRED_TASK_FIELDS = (
+    "task_id",
+    "target",
+    "objective",
+    "time_range",
+    "decision_context",
+    "success_criteria",
+)
 
 
 def read_json(path: Path) -> dict:
@@ -24,6 +32,16 @@ def read_json(path: Path) -> dict:
 def validate(rounds_dir: Path, summary_path: Path) -> list[str]:
     errors: list[str] = []
     statuses: list[str] = []
+    task_path = rounds_dir.parent / "task.json"
+    try:
+        task = read_json(task_path)
+    except (OSError, ValueError, json.JSONDecodeError) as error:
+        return [str(error)]
+    for field in REQUIRED_TASK_FIELDS:
+        if field not in task:
+            errors.append(f"缺少任务字段：{field}")
+    task_id = task.get("task_id")
+    task_target = task.get("target")
     for name in ROUNDS:
         path = rounds_dir / name / "round_manifest.json"
         if not path.is_file():
@@ -39,6 +57,10 @@ def validate(rounds_dir: Path, summary_path: Path) -> list[str]:
         for field in REQUIRED_MANIFEST_FIELDS:
             if field not in manifest:
                 errors.append(f"缺少 manifest 字段：{name}.{field}")
+        if manifest.get("task_id") != task_id:
+            errors.append(f"任务 ID 不一致：{name}")
+        if manifest.get("target") != task_target:
+            errors.append(f"研究对象不一致：{name}")
         status = manifest.get("status")
         if status not in ALLOWED:
             errors.append(f"无效状态：{name}={status}")
@@ -57,6 +79,10 @@ def validate(rounds_dir: Path, summary_path: Path) -> list[str]:
         errors.append("存在部分成功、阻塞或失败轮次时总体状态不得为 success")
     if summary.get("current_douyin_primary_evidence") is not True and overall == "success":
         errors.append("主抖音证据未明确存在时总体状态不得为 success")
+    if summary.get("task_id") != task_id:
+        errors.append("summary.task_id 与 task.json 不一致")
+    if summary.get("target") != task_target:
+        errors.append("summary.target 与 task.json 不一致")
     return errors
 
 

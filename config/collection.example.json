@@ -1,5 +1,5 @@
 {
-  "output_root": "D:\\magewell-douyin-output",
+  "output_root": "D:\\douyin-intelligence-output",
   "opencli": {
     "command": "opencli",
     "profile": "replace-with-local-profile"

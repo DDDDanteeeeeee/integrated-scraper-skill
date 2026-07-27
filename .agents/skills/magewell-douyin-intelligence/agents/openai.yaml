@@ -1,7 +1,0 @@
-interface:
-  display_name: "Magewell 抖音情报"
-  short_description: "一键初始化本机环境并受控采集抖音公开需求机会情报报告"
-  default_prompt: "Use $magewell-douyin-intelligence to initialize this Skill Pack or collect audited Douyin intelligence."
-
-policy:
-  allow_implicit_invocation: false

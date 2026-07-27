@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SKILL_ROOT = ROOT / ".agents" / "skills" / "magewell-douyin-intelligence"
+SKILL_ROOT = ROOT / ".agents" / "skills" / "douyin-intelligence"
 
 
 def load_module(name: str, relative_path: str):
@@ -50,6 +50,15 @@ class DoctorTests(unittest.TestCase):
 class ValidatorTests(unittest.TestCase):
     def make_run(self, root: Path, status: str = "success", overall: str = "success") -> list[str]:
         rounds_dir = root / "rounds"
+        task = {
+            "task_id": "20260727-camping-projector",
+            "target": "露营投影仪",
+            "objective": "提取真实用户需求和产品机会",
+            "time_range": "最近 30 天",
+            "decision_context": "新品策划团队",
+            "success_criteria": ["每条结论附公开来源"],
+        }
+        (root / "task.json").write_text(json.dumps(task, ensure_ascii=False), encoding="utf-8")
         for round_name in validator.ROUNDS:
             path = rounds_dir / round_name
             path.mkdir(parents=True)
@@ -58,9 +67,10 @@ class ValidatorTests(unittest.TestCase):
                     {
                         "round": round_name,
                         "skill": round_name,
+                        "task_id": task["task_id"],
                         "status": status,
                         "timestamp": "2026-07-27T00:00:00+08:00",
-                        "target": "美乐威 Magewell",
+                        "target": task["target"],
                         "result": {},
                         **({"recovery_condition": "install or configure"} if status != "success" else {}),
                     }
@@ -69,7 +79,15 @@ class ValidatorTests(unittest.TestCase):
             )
         summary = root / "summary.json"
         summary.write_text(
-            json.dumps({"overall_status": overall, "current_douyin_primary_evidence": True}),
+            json.dumps(
+                {
+                    "task_id": task["task_id"],
+                    "target": task["target"],
+                    "overall_status": overall,
+                    "current_douyin_primary_evidence": True,
+                },
+                ensure_ascii=False,
+            ),
             encoding="utf-8",
         )
         return validator.validate(rounds_dir, summary)
@@ -88,6 +106,17 @@ class ValidatorTests(unittest.TestCase):
             errors = self.make_run(Path(directory), status="partial_success", overall="success")
         self.assertIn("存在部分成功、阻塞或失败轮次时总体状态不得为 success", errors)
 
+    def test_rejects_cross_task_round(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.make_run(root)
+            path = root / "rounds" / validator.ROUNDS[0] / "round_manifest.json"
+            manifest = json.loads(path.read_text(encoding="utf-8"))
+            manifest["task_id"] = "another-task"
+            path.write_text(json.dumps(manifest, ensure_ascii=False), encoding="utf-8")
+            errors = validator.validate(root / "rounds", root / "summary.json")
+        self.assertIn("任务 ID 不一致：01-opencli", errors)
+
 
 class InitializerTests(unittest.TestCase):
     def test_requires_profile_for_config(self):
@@ -97,7 +126,7 @@ class InitializerTests(unittest.TestCase):
     def test_builds_non_secret_local_config(self):
         config = initializer.build_config(opencli_profile="douyin-work")
         self.assertEqual(config["opencli"]["profile"], "douyin-work")
-        self.assertEqual(config["output_root"], r"D:\magewell-douyin-output")
+        self.assertEqual(config["output_root"], r"D:\douyin-intelligence-output")
         self.assertIsNone(doctor.contains_sensitive_key(config))
 
     def test_never_overwrites_existing_config(self):
@@ -129,7 +158,7 @@ class DependencyManifestTests(unittest.TestCase):
 class PackDoctorTests(unittest.TestCase):
     def config(self):
         return {
-            "output_root": r"D:\magewell-douyin-output",
+            "output_root": r"D:\douyin-intelligence-output",
             "opencli": {"command": "opencli", "profile": "douyin-work"},
             "browser_harness": {"python": "python", "cdp_url": "http://127.0.0.1:9222"},
             "scrapling": {"executable": "scrapling"},

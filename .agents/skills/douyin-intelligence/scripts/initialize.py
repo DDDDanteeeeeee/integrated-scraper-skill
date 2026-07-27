@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Create a non-secret local configuration for the Magewell intelligence Skill Pack."""
+"""Create a non-secret local configuration for the Douyin intelligence Skill Pack."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 
 
-DEFAULT_OUTPUT_ROOT = r"D:\magewell-douyin-output"
+DEFAULT_OUTPUT_ROOT = r"D:\douyin-intelligence-output"
 DEFAULT_CDP_URL = "http://127.0.0.1:9222"
 PROJECT_ROOT = Path(__file__).resolve().parents[4]
 CONFIG_DIRECTORY = PROJECT_ROOT / "config"

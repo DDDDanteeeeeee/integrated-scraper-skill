@@ -1,0 +1,7 @@
+interface:
+  display_name: "抖音公开情报"
+  short_description: "自定义对象与目标，采集可审计的抖音公开需求和机会情报"
+  default_prompt: "Use $douyin-intelligence to research a Douyin target and objective that I provide."
+
+policy:
+  allow_implicit_invocation: false

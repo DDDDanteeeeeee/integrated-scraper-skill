@@ -1,0 +1,14 @@
+{
+  "output_root": "D:\\magewell-douyin-output",
+  "opencli": {
+    "command": "opencli",
+    "profile": "replace-with-local-profile"
+  },
+  "browser_harness": {
+    "python": "python",
+    "cdp_url": "http://127.0.0.1:9222"
+  },
+  "scrapling": {
+    "executable": "scrapling"
+  }
+}

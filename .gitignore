@@ -1,0 +1,17 @@
+# Local operational data and evidence
+data/
+reports/
+runtime/
+collector-work/
+traces/
+
+# Local configuration and secrets
+config/collection.local.json
+.env
+*.sqlite
+
+# Python and editor state
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.vscode/

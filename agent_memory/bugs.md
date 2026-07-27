@@ -23,3 +23,6 @@
 - CDP 曾可接受任意 HTTP 地址，初始化器也可写入任意路径；现已限制为本机回环 CDP 与项目内本机配置文件。
 - 用户已明确选择 MIT 并完成公开发布；远程仓库已核验公开可见、许可证识别正常且首个 GitHub Actions 校验通过。
 - 官方校验器在 Windows 默认 GBK 环境无法读取 UTF-8 中文文件；以 `PYTHONUTF8=1` 运行后已通过，属于工具编码兼容性而非 Skill 结构错误。
+- GitHub App 创建 PR 时返回 `403 Resource not accessible by integration`；
+  已按 GitHub 发布 Skill 的回退规则使用重新授权的 GitHub CLI 成功创建草稿
+  PR #1。

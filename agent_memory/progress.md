@@ -20,7 +20,9 @@
 - 已新增 `docs/delivery-guide.zh-cn.md`，覆盖 Codex Desktop、Git、Node.js、Python、仓库下载、Skill 发现、六轮依赖初始化、专属浏览器与 CDP 授权、抖音人工登录、首次任务、结果验收、更新迁移和故障排查。
 - README 已增加交付手册入口；Codex 安装、登录和 Skill 调用方式按当前 OpenAI 官方文档复核，未再沿用“必须订阅 ChatGPT Plus”等过时或不准确表述。
 - 文档结构检查、代码围栏检查、相对链接检查和 `git diff --check` 均通过；17 项单元测试及官方 Skill 校验再次通过。
-- 本次文档改动仅保存在本地工作区，尚未提交或推送到公开 GitHub 仓库。
+- 通用化与交付手册改动已提交为 `1ed829b`，推送到
+  `agent/generalize-douyin-intelligence`，并创建草稿 PR
+  `https://github.com/DDDDanteeeeeee/douyin-intelligence-skill/pull/1`。
 - 用户指出交付手册错误地把 Magewell 示例写成产品边界；已追溯到 Skill 名称、
   元数据、默认目录和报告名同样存在业务硬编码。
 - Skill 已从 `magewell-douyin-intelligence` 通用化为
@@ -34,9 +36,11 @@
   frontmatter 名称、字段、长度和字符约束；文档结构、代码围栏、相对链接和
   `git diff --check` 已通过。官方 `quick_validate.py` 当前因验证环境缺少
   PyYAML 未能直接运行，尚不能把该命令写为本轮通过。
+- 草稿 PR #1 的 GitHub Actions `validate-skill-pack / test` 已通过，
+  PR 合并状态为 `CLEAN`；`main` 尚未合并该 PR。
 
 ## 下一步
 
-1. 由用户审阅通用化后的交付手册和调用名。
-2. 用户明确确认发布后，再提交并推送改动到公开 GitHub 仓库。
-3. 在一台新电脑上按交付手册完成一次端到端安装、登录、采集和报告验收。
+1. 由用户审阅并合并草稿 PR #1。
+2. 合并后在一台新电脑上按交付手册完成一次端到端安装、登录、采集和报告
+   验收。

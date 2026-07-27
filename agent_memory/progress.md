@@ -14,7 +14,7 @@
 - 初始化器仅允许写入仓库内的 `config/collection.local.json`；CDP 地址仅允许本机回环地址，避免误连远端浏览器。
 - 新增 Windows GitHub Actions 校验；本地完整依赖检查、初始化边界、17 项单元测试和官方校验均已通过。
 - GitHub CLI 已重新授权，首次提交 `7b7742f` 已在本地 `main` 分支创建，并使用仓库级 GitHub noreply 提交身份。
-- 公开仓库已发布：`https://github.com/DDDDanteeeeeee/magewell-douyin-intelligence-skill`。本地与远程 `main` 均为 `6d0044715aa51c8db4c9db32464c5a375da41284`，MIT LICENSE 已由 GitHub 识别。
+- 公开仓库已更名为：`https://github.com/DDDDanteeeeeee/douyin-intelligence-skill`。仓库保持 PUBLIC、MIT 和 `main`；本机 `origin` 已同步到新规范地址，旧 GitHub 地址仍解析到新仓库。
 - GitHub Actions 的 `validate-skill-pack` 已在该提交上成功完成。
 
 ## 下一步

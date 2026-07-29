@@ -5,6 +5,8 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -170,6 +172,78 @@ class PackDoctorTests(unittest.TestCase):
             )
         self.assertEqual(result["status"], "awaiting_human")
         self.assertEqual(result["checks"]["browser-harness"]["status"], "awaiting_human")
+
+    def test_accepts_chrome_discovery_404_when_browser_harness_is_connected(self):
+        manifest = DependencyManifestTests().load_manifest()
+        with tempfile.TemporaryDirectory() as directory:
+            with patch.object(
+                pack_doctor,
+                "browser_harness_health",
+                return_value=(True, "daemon 正常且存在 1 个活动连接"),
+                create=True,
+            ):
+                result = pack_doctor.check_pack(
+                    self.config(),
+                    manifest,
+                    self.roots_with_skills(Path(directory)),
+                    command_checker=lambda _: True,
+                    cdp_probe=lambda _: (False, "HTTP Error 404: Not Found"),
+                )
+        self.assertEqual(result["status"], "success")
+        self.assertEqual(result["checks"]["browser-harness"]["status"], "success")
+        self.assertIn("Chrome 147+", result["checks"]["browser-harness"]["detail"])
+
+    def test_keeps_chrome_discovery_404_blocked_without_browser_harness_connection(self):
+        manifest = DependencyManifestTests().load_manifest()
+        with tempfile.TemporaryDirectory() as directory:
+            with patch.object(
+                pack_doctor,
+                "browser_harness_health",
+                return_value=(False, "没有活动浏览器连接"),
+                create=True,
+            ):
+                result = pack_doctor.check_pack(
+                    self.config(),
+                    manifest,
+                    self.roots_with_skills(Path(directory)),
+                    command_checker=lambda _: True,
+                    cdp_probe=lambda _: (False, "HTTP Error 404: Not Found"),
+                )
+        self.assertEqual(result["status"], "awaiting_human")
+        self.assertEqual(result["checks"]["browser-harness"]["status"], "awaiting_human")
+
+    def test_browser_harness_health_accepts_local_connection_with_optional_cloud_failure(self):
+        completed = SimpleNamespace(
+            stdout=(
+                "browser-harness doctor\n"
+                "  [ok  ] daemon alive\n"
+                "  [ok  ] active browser connections — 1\n"
+                "  [FAIL] Browser Use cloud auth — optional\n"
+            ),
+            stderr="",
+            returncode=0,
+        )
+        ready, detail = pack_doctor.browser_harness_health(
+            runner=lambda *args, **kwargs: completed
+        )
+        self.assertTrue(ready)
+        self.assertIn("活动浏览器连接", detail)
+
+    def test_browser_harness_health_rejects_zero_active_connections(self):
+        completed = SimpleNamespace(
+            stdout=(
+                "browser-harness doctor\n"
+                "  [ok  ] daemon alive\n"
+                "  [FAIL] active browser connections — 0\n"
+            ),
+            stderr="",
+            returncode=1,
+        )
+        ready, detail = pack_doctor.browser_harness_health(
+            runner=lambda *args, **kwargs: completed
+        )
+        self.assertFalse(ready)
+        self.assertIn("没有活动浏览器连接", detail)
 
     def test_reports_success_only_when_all_required_dependencies_are_ready(self):
         manifest = DependencyManifestTests().load_manifest()

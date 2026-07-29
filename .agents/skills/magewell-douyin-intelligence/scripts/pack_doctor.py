@@ -67,6 +67,10 @@ def find_skill(skill_id: str, roots: list[Path]) -> Path | None:
     return None
 
 
+def browser_harness_health(command: str = "browser-harness", *, runner=None) -> tuple[bool, str]:
+    return False, "browser-harness daemon 未就绪或没有活动浏览器连接"
+
+
 def check_pack(
     config: dict,
     manifest: dict,
@@ -74,6 +78,7 @@ def check_pack(
     *,
     command_checker=doctor.command_available,
     cdp_probe=doctor.probe_cdp,
+    browser_health_checker=None,
 ) -> dict:
     entries = validate_manifest(manifest)
     base = doctor.check(config, command_checker=command_checker, cdp_probe=cdp_probe)
@@ -87,15 +92,27 @@ def check_pack(
     browser_skill = find_skill("browser-harness", skill_roots)
     browser_cli = command_checker("browser-harness")
     browser_cdp = bool(base["checks"]["browser"]["ready"])
+    browser_detail = str(base["checks"]["browser"]["detail"])
+    health_check = browser_health_checker or browser_harness_health
+    if (
+        browser_skill
+        and browser_cli
+        and not browser_cdp
+        and "HTTP Error 404" in browser_detail
+    ):
+        browser_cdp, health_detail = health_check()
+        if browser_cdp:
+            browser_detail = f"Chrome 147+ 兼容验证通过；{health_detail}"
+
     if not browser_skill or not browser_cli:
         browser_status = "blocked_dependency"
         browser_detail = "需要已安装的 browser-harness Skill 与本机命令"
     elif not browser_cdp:
         browser_status = "awaiting_human"
-        browser_detail = str(base["checks"]["browser"]["detail"])
     else:
         browser_status = "success"
-        browser_detail = "Skill、命令和本机 CDP 已就绪"
+        if "Chrome 147+" not in browser_detail:
+            browser_detail = "Skill、命令和本机 CDP 已就绪"
     checks["browser-harness"] = {"status": browser_status, "ready": browser_status == "success", "detail": browser_detail}
 
     for skill_id in ("last30days", "last30days-cn"):

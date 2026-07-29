@@ -5,6 +5,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -168,6 +169,45 @@ class PackDoctorTests(unittest.TestCase):
                 command_checker=lambda _: True,
                 cdp_probe=lambda _: (False, "需要 CDP 授权"),
             )
+        self.assertEqual(result["status"], "awaiting_human")
+        self.assertEqual(result["checks"]["browser-harness"]["status"], "awaiting_human")
+
+    def test_accepts_chrome_discovery_404_when_browser_harness_is_connected(self):
+        manifest = DependencyManifestTests().load_manifest()
+        with tempfile.TemporaryDirectory() as directory:
+            with patch.object(
+                pack_doctor,
+                "browser_harness_health",
+                return_value=(True, "daemon 正常且存在 1 个活动连接"),
+                create=True,
+            ):
+                result = pack_doctor.check_pack(
+                    self.config(),
+                    manifest,
+                    self.roots_with_skills(Path(directory)),
+                    command_checker=lambda _: True,
+                    cdp_probe=lambda _: (False, "HTTP Error 404: Not Found"),
+                )
+        self.assertEqual(result["status"], "success")
+        self.assertEqual(result["checks"]["browser-harness"]["status"], "success")
+        self.assertIn("Chrome 147+", result["checks"]["browser-harness"]["detail"])
+
+    def test_keeps_chrome_discovery_404_blocked_without_browser_harness_connection(self):
+        manifest = DependencyManifestTests().load_manifest()
+        with tempfile.TemporaryDirectory() as directory:
+            with patch.object(
+                pack_doctor,
+                "browser_harness_health",
+                return_value=(False, "没有活动浏览器连接"),
+                create=True,
+            ):
+                result = pack_doctor.check_pack(
+                    self.config(),
+                    manifest,
+                    self.roots_with_skills(Path(directory)),
+                    command_checker=lambda _: True,
+                    cdp_probe=lambda _: (False, "HTTP Error 404: Not Found"),
+                )
         self.assertEqual(result["status"], "awaiting_human")
         self.assertEqual(result["checks"]["browser-harness"]["status"], "awaiting_human")
 

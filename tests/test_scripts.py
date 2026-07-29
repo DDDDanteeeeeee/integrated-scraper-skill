@@ -5,6 +5,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 
@@ -210,6 +211,39 @@ class PackDoctorTests(unittest.TestCase):
                 )
         self.assertEqual(result["status"], "awaiting_human")
         self.assertEqual(result["checks"]["browser-harness"]["status"], "awaiting_human")
+
+    def test_browser_harness_health_accepts_local_connection_with_optional_cloud_failure(self):
+        completed = SimpleNamespace(
+            stdout=(
+                "browser-harness doctor\n"
+                "  [ok  ] daemon alive\n"
+                "  [ok  ] active browser connections — 1\n"
+                "  [FAIL] Browser Use cloud auth — optional\n"
+            ),
+            stderr="",
+            returncode=0,
+        )
+        ready, detail = pack_doctor.browser_harness_health(
+            runner=lambda *args, **kwargs: completed
+        )
+        self.assertTrue(ready)
+        self.assertIn("活动浏览器连接", detail)
+
+    def test_browser_harness_health_rejects_zero_active_connections(self):
+        completed = SimpleNamespace(
+            stdout=(
+                "browser-harness doctor\n"
+                "  [ok  ] daemon alive\n"
+                "  [FAIL] active browser connections — 0\n"
+            ),
+            stderr="",
+            returncode=1,
+        )
+        ready, detail = pack_doctor.browser_harness_health(
+            runner=lambda *args, **kwargs: completed
+        )
+        self.assertFalse(ready)
+        self.assertIn("没有活动浏览器连接", detail)
 
     def test_reports_success_only_when_all_required_dependencies_are_ready(self):
         manifest = DependencyManifestTests().load_manifest()

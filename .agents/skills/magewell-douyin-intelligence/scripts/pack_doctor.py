@@ -6,6 +6,8 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import re
+import subprocess
 from pathlib import Path
 
 
@@ -68,6 +70,29 @@ def find_skill(skill_id: str, roots: list[Path]) -> Path | None:
 
 
 def browser_harness_health(command: str = "browser-harness", *, runner=None) -> tuple[bool, str]:
+    run = runner or subprocess.run
+    try:
+        completed = run(
+            [command, "--doctor"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=10,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return False, "browser-harness doctor 无法完成"
+
+    output = f"{completed.stdout}\n{completed.stderr}"
+    daemon_ok = re.search(r"\[ok\s*\]\s+daemon alive\b", output, re.IGNORECASE)
+    active = re.search(
+        r"\[ok\s*\]\s+active browser connections\s+[—-]\s+(\d+)",
+        output,
+        re.IGNORECASE,
+    )
+    if daemon_ok and active and int(active.group(1)) >= 1:
+        return True, "browser-harness daemon 正常且存在活动浏览器连接"
     return False, "browser-harness daemon 未就绪或没有活动浏览器连接"
 
 

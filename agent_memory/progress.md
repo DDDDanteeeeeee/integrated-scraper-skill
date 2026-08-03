@@ -24,14 +24,17 @@ Skill 名称和交付材料统一为通用的 `integrated-scraper` 综合抓取�
   `compliant_skip`。
 - 官方 `quick_validate.py` 因当前 Codex 内置 Python 缺少 PyYAML 而未执行
   完成；元数据单元测试已覆盖其名称、frontmatter 字段、长度和字符约束。
-- 定位改动已提交到 `agent/integrated-scraper-positioning`；GitHub 推送和仓库
-  更名因现有 `gh` 授权令牌失效而暂停，已打开可见的设备授权窗口等待用户完成。
-- 远程仓库仍为 `douyin-intelligence-skill`；草稿 PR #1 基于旧定位，尚未处理。
+- 定位改动已提交并推送到 `agent/integrated-scraper-positioning`。
+- 公开仓库已更名为
+  `https://github.com/DDDDanteeeeeee/integrated-scraper-skill`，本机 `origin`
+  已同步到新地址。
+- 旧草稿 PR #1 已添加替代说明并关闭，没有合并旧定位。
+- 新草稿 PR #3 已创建：
+  `https://github.com/DDDDanteeeeeee/integrated-scraper-skill/pull/3`。
+- PR #3 的 GitHub Actions `validate-skill-pack / test` 已通过。
 
 ## 下一步
 
-1. 用户完成 GitHub 设备授权后复检 `gh auth status`。
-2. 将 GitHub 仓库更名为 `integrated-scraper-skill`，同步本机 `origin` 并推送
-   当前分支。
-3. 处理旧草稿 PR #1，并确认新提交的 GitHub Actions 状态。
-4. 后续在具备 PyYAML 的环境补跑官方 `quick_validate.py`。
+1. 推送本次状态记录并复检 PR #3 的最新 GitHub Actions。
+2. 由用户审阅并决定是否将 PR #3 标记为可审阅或合并。
+3. 后续在具备 PyYAML 的环境补跑官方 `quick_validate.py`。

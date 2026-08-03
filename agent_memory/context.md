@@ -4,7 +4,7 @@
 
 - 交付物是可发布、可一键初始化的项目级综合抓取 Codex Skill Pack，不是
   独立应用、云服务、平台管理系统、账号管理系统或平台适配器体系。
-- Skill 调用名为 `integrated-scraper`，目标仓库名为
+- Skill 调用名为 `integrated-scraper`，公开仓库名为
   `integrated-scraper-skill`，中文名称为“综合抓取”。
 - 核心能力是把 OpenCLI、last30days、last30days-cn、BrowserHarness、
   Scrapling 和 Cloakbrowser 编排成六个独立抓取轮次，保留原始证据并生成

@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SKILL_ROOT = ROOT / ".agents" / "skills" / "douyin-intelligence"
+SKILL_ROOT = ROOT / ".agents" / "skills" / "integrated-scraper"
 
 
 def load_module(name: str, relative_path: str):
@@ -84,7 +84,7 @@ class ValidatorTests(unittest.TestCase):
                     "task_id": task["task_id"],
                     "target": task["target"],
                     "overall_status": overall,
-                    "current_douyin_primary_evidence": True,
+                    "current_primary_evidence": True,
                 },
                 ensure_ascii=False,
             ),
@@ -124,9 +124,9 @@ class InitializerTests(unittest.TestCase):
             initializer.build_config(opencli_profile="")
 
     def test_builds_non_secret_local_config(self):
-        config = initializer.build_config(opencli_profile="douyin-work")
-        self.assertEqual(config["opencli"]["profile"], "douyin-work")
-        self.assertEqual(config["output_root"], r"D:\douyin-intelligence-output")
+        config = initializer.build_config(opencli_profile="collection-work")
+        self.assertEqual(config["opencli"]["profile"], "collection-work")
+        self.assertEqual(config["output_root"], r"D:\integrated-scraper-output")
         self.assertIsNone(doctor.contains_sensitive_key(config))
 
     def test_never_overwrites_existing_config(self):
@@ -134,7 +134,7 @@ class InitializerTests(unittest.TestCase):
             path = Path(directory) / "collection.local.json"
             path.write_text("{}", encoding="utf-8")
             with self.assertRaises(FileExistsError):
-                initializer.write_config(path, initializer.build_config(opencli_profile="douyin-work"))
+                initializer.write_config(path, initializer.build_config(opencli_profile="collection-work"))
 
     def test_rejects_external_config_target(self):
         self.assertFalse(initializer.is_project_config_path(Path("C:/outside/collection.local.json")))
@@ -158,8 +158,8 @@ class DependencyManifestTests(unittest.TestCase):
 class PackDoctorTests(unittest.TestCase):
     def config(self):
         return {
-            "output_root": r"D:\douyin-intelligence-output",
-            "opencli": {"command": "opencli", "profile": "douyin-work"},
+            "output_root": r"D:\integrated-scraper-output",
+            "opencli": {"command": "opencli", "profile": "collection-work"},
             "browser_harness": {"python": "python", "cdp_url": "http://127.0.0.1:9222"},
             "scrapling": {"executable": "scrapling"},
         }

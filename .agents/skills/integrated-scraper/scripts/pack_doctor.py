@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify every declared Douyin Skill Pack dependency without installing anything."""
+"""Verify every declared integrated scraper dependency without installing anything."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from pathlib import Path
 
 
 def load_doctor_module():
-    spec = importlib.util.spec_from_file_location("douyin_pack_doctor_dependency", Path(__file__).with_name("doctor.py"))
+    spec = importlib.util.spec_from_file_location("integrated_scraper_pack_doctor_dependency", Path(__file__).with_name("doctor.py"))
     if spec is None or spec.loader is None:
         raise RuntimeError("无法加载 doctor.py")
     module = importlib.util.module_from_spec(spec)

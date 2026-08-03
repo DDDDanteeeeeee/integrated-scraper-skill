@@ -1,19 +1,19 @@
-# 抖音公开情报 Skill Pack 新电脑交付与使用手册
+# 综合抓取 Skill Pack 新电脑交付与使用手册
 
 这份手册面向第一次接触 Codex 的使用者。你可以从一台没有安装
-Codex、Git、Python 和 Node.js 的 Windows 电脑开始，完成项目下载、
-本机依赖配置、抖音登录、首次情报任务和结果验收。
+Codex、Git、Python 和 Node.js 的 Windows 电脑开始，完成项目下载、本机
+依赖配置、目标账号登录、首次抓取任务和结果验收。
 
 完成本手册后，你会得到一个由 Codex 驱动的本机工作流。你在 Codex
-中输入每次不同的研究对象和目标，项目内的 `@douyin-intelligence` Skill
-负责检查环境、按固定顺序采集公开信息、回答本次问题，并将原始证据与报告
-保存在本机。
+中输入每次不同的目标来源、抓取对象和用途，项目内的
+`@integrated-scraper` Skill 负责检查环境、调用六种抓取能力、保存公开证据，
+并输出结构化数据和基于证据的报告。
 
 <!-- prettier-ignore -->
 > [!IMPORTANT]
-> 这是一套通用的抖音公开情报工作流。它固定采集、安全和审计规则，不固定
-> 品牌、账号、关键词、受益公司或分析结论。后文出现的具体品牌和受益方
-> 只用于演示如何写任务，不是产品边界或默认值。
+> 交付物是一个集成多个抓取 Skill 的综合抓取 Skill，不是平台系统。它固定
+> 抓取、证据、安全和审计规则，不固定网站、平台、品牌、账号、关键词、受益
+> 公司或分析结论。后文出现的抖音、X 和其他来源都只是任务示例。
 
 <!-- prettier-ignore -->
 > [!IMPORTANT]
@@ -23,21 +23,22 @@ Codex、Git、Python 和 Node.js 的 Windows 电脑开始，完成项目下载�
 
 ## 模块一：先确认这套交付能做什么
 
-当前交付是一个项目级 Codex Skill Pack。它不是独立桌面软件、云端
-控制台，也不是代替抖音账号的人机验证工具。
+当前交付是一个项目级 Codex Skill Pack。它不是独立桌面软件、云端控制台、
+平台管理系统、账号管理系统或平台注册表。
 
 ### 1.1 交付后的完整能力
 
 完成初始化后，你可以执行以下工作：
 
-- 输入任意抖音账号、品牌、产品、关键词、话题或具体作品作为研究对象。
+- 用自然语言指定网站、平台、账号、品牌、产品、关键词、话题或具体 URL。
 - 每次指定不同的分析目标、时间范围、业务视角和成功条件。
-- 读取与当次任务相关的抖音公开作品和可见公开评论。
+- 读取与当次任务相关的公开页面、内容和可见公开评论。
 - 从公开内容中提取真实使用场景、故障、选型、价格、试用、部署和替代需求。
 - 按你本次指定的决策场景识别产品、销售、内容或市场机会。
 - 按六个独立轮次保留采集状态、来源、时间和恢复条件。
 - 将原始证据、处理中间文件和专业报告保存在指定的本机目录。
 - 在登录过期或出现验证码时暂停，等你完成操作后继续同一个任务。
+- 根据目标来源选择已集成工具能够执行的抓取路径，不要求你配置平台适配器。
 
 ### 1.2 当前交付明确不做的事情
 
@@ -65,9 +66,9 @@ Codex、Git、Python 和 Node.js 的 Windows 电脑开始，完成项目下载�
 | Git、Python、Node.js | 使用者或 IT | 命令行版本检查成功。 |
 | OpenCLI 命令 | 交付方或获授权管理员 | 本机能执行 OpenCLI。 |
 | OpenCLI Profile 名称 | 交付方或获授权管理员 | 提供真实 Profile 名称，不提供密码或 Cookie。 |
-| 抖音账号登录 | 使用者 | 在专属浏览器中人工完成。 |
+| 目标账号登录 | 使用者 | 在需要登录的目标页面中人工完成。 |
 | 验证码、设备验证 | 使用者 | 只在平台页面中操作。 |
-| 业务任务 | 使用者 | 每次说明对象、时间范围和想解决的问题。 |
+| 抓取任务 | 使用者 | 每次说明来源、对象、时间范围和结果用途。 |
 
 <!-- prettier-ignore -->
 > [!WARNING]
@@ -246,8 +247,8 @@ C:\Users\<你的Windows用户名>\Documents\CodexProjects
 运行：
 
 ```powershell
-git clone https://github.com/DDDDanteeeeeee/douyin-intelligence-skill.git
-Set-Location .\douyin-intelligence-skill
+git clone https://github.com/DDDDanteeeeeee/integrated-scraper-skill.git
+Set-Location .\integrated-scraper-skill
 ```
 
 确认当前目录：
@@ -259,7 +260,7 @@ git status -sb
 
 预期结果是：
 
-- 当前目录以 `douyin-intelligence-skill` 结尾。
+- 当前目录以 `integrated-scraper-skill` 结尾。
 - Git 分支为 `main`。
 - 工作树没有未提交改动。
 
@@ -270,7 +271,7 @@ git status -sb
 ```powershell
 Test-Path .\README.md
 Test-Path .\dependencies.manifest.json
-Test-Path .\.agents\skills\douyin-intelligence\SKILL.md
+Test-Path .\.agents\skills\integrated-scraper\SKILL.md
 ```
 
 三条命令都必须返回 `True`。
@@ -278,10 +279,10 @@ Test-Path .\.agents\skills\douyin-intelligence\SKILL.md
 关键目录结构如下：
 
 ```text
-douyin-intelligence-skill/
+integrated-scraper-skill/
 ├── .agents/
 │   └── skills/
-│       └── douyin-intelligence/
+│       └── integrated-scraper/
 │           ├── SKILL.md
 │           ├── agents/
 │           ├── references/
@@ -302,7 +303,7 @@ douyin-intelligence-skill/
 
 1. 打开 Codex 桌面端。
 2. 按 `Ctrl + O`，或选择 **Add new project**。
-3. 选择刚才克隆的 `douyin-intelligence-skill` 文件夹。
+3. 选择刚才克隆的 `integrated-scraper-skill` 文件夹。
 4. 确认窗口中的项目根目录就是该文件夹。
 5. 如果 Codex 请求信任项目，先检查仓库地址和关键文件，再确认。
 
@@ -314,22 +315,22 @@ Codex 从项目根目录的 `.agents/skills` 发现仓库级 Skill。官方规�
 在新聊天的输入框中输入 `@`，搜索：
 
 ```text
-douyin-intelligence
+integrated-scraper
 ```
 
-如果列表中出现 **抖音公开情报**，说明项目级 Skill 已加载。
+如果列表中出现 **综合抓取**，说明项目级 Skill 已加载。
 
 如果没有出现：
 
 1. 确认打开的是仓库根目录，不是它的父目录。
 2. 确认
-   `.agents\skills\douyin-intelligence\SKILL.md`
+   `.agents\skills\integrated-scraper\SKILL.md`
    存在。
 3. 关闭项目后重新打开。
 4. 仍未出现时，完全退出并重启 Codex。
 
 在 Codex CLI 或 IDE 扩展中，可以运行 `/skills`，或使用
-`$douyin-intelligence` 显式调用。
+`$integrated-scraper` 显式调用。
 
 ## 模块四：理解初始化和六轮工作流
 
@@ -342,13 +343,13 @@ douyin-intelligence
 
 ```text
 01 OpenCLI
-   ↓ 作品和热门公开评论主证据
+   ↓ 目标内容和公开评论主证据
 02 last30days
    ↓ 海外近 30 天趋势补充
 03 last30days-cn
    ↓ 中文公开趋势补充
 04 BrowserHarness
-   ↓ 登录态核验和具体作品评论补充
+   ↓ 登录态核验和可见页面证据补充
 05 Scrapling
    ↓ 已知公开 URL 正文补充
 06 Cloakbrowser
@@ -366,7 +367,7 @@ douyin-intelligence
 
 | 依赖 | 是否必需 | 作用 | 初始化行为 |
 | --- | --- | --- | --- |
-| OpenCLI | 是 | 作品和热门评论主采集 | 只检查，不由仓库安装。 |
+| OpenCLI | 是 | 目标内容和公开评论主采集 | 只检查，不由仓库安装。 |
 | BrowserHarness | 是 | 登录态和评论补充 | 确认后按上游安装。 |
 | last30days | 是 | 海外趋势补充 | 确认后安装 Skill。 |
 | last30days-cn | 是 | 中文趋势补充 | 确认后安装 Skill。 |
@@ -399,14 +400,14 @@ douyin-intelligence
 在已经打开该项目的 Codex 新聊天中，复制并发送：
 
 ```text
-@douyin-intelligence 初始化这个 Skill Pack。
+@integrated-scraper 初始化这个 Skill Pack。
 
 要求：
 1. 先检查全部依赖，不要直接开始采集。
 2. 展示每个依赖的状态、官方来源和安装动作。
 3. 任何外部安装都先向我确认。
 4. 不读取或要求密码、Cookie、验证码、MFA 或浏览器 Profile。
-5. 如果本机没有 D 盘，把输出目录设为我的 Documents\douyin-intelligence-output。
+5. 如果本机没有 D 盘，把输出目录设为我的 Documents\integrated-scraper-output。
 ```
 
 ### 5.2 识别第一次暂停
@@ -423,11 +424,11 @@ awaiting_human
 回复示例：
 
 ```text
-OpenCLI Profile 名称是 douyin-work。
+OpenCLI Profile 名称是 collection-work。
 只把名称写入项目本机配置，不要读取或导出账号凭据。
 ```
 
-`douyin-work` 只是示例。必须替换成交付方实际提供的 Profile 名称。
+`collection-work` 只是示例。必须替换成交付方实际提供的 Profile 名称。
 
 ### 5.3 逐项批准依赖安装
 
@@ -482,20 +483,20 @@ ready_to_write
 默认输出目录是：
 
 ```text
-D:\douyin-intelligence-output
+D:\integrated-scraper-output
 ```
 
 如果电脑没有 D 盘，在初始化对话中明确指定：
 
 ```text
 把本机输出目录设为：
-C:\Users\<我的Windows用户名>\Documents\douyin-intelligence-output
+C:\Users\<我的Windows用户名>\Documents\integrated-scraper-output
 ```
 
 也可以使用 PowerShell 获取当前用户目录：
 
 ```powershell
-$outputRoot = Join-Path $env:USERPROFILE "Documents\douyin-intelligence-output"
+$outputRoot = Join-Path $env:USERPROFILE "Documents\integrated-scraper-output"
 $outputRoot
 ```
 
@@ -511,7 +512,7 @@ OpenCLI 不是本仓库的一部分。交付方需要提供：
 1. 获授权的安装包或内部安装方法。
 2. 可执行命令名称或绝对路径。
 3. 可使用的 Profile 名称。
-4. 允许访问的目标平台范围。
+4. 获准访问的目标来源范围。
 
 安装后在 PowerShell 中测试交付方提供的命令。不要在本手册中猜测 OpenCLI
 参数，也不要把账号凭据写入 `collection.local.json`。
@@ -628,17 +629,17 @@ compliant_skip
 只有在 Codex 引导不可用时才执行本节。先定义实际值：
 
 ```powershell
-$opencliProfile = "douyin-work"
+$opencliProfile = "collection-work"
 $scraplingExe = (Resolve-Path .\runtime\scrapling-venv\Scripts\scrapling.exe).Path
-$outputRoot = Join-Path $env:USERPROFILE "Documents\douyin-intelligence-output"
+$outputRoot = Join-Path $env:USERPROFILE "Documents\integrated-scraper-output"
 ```
 
-将 `douyin-work` 替换为交付方提供的真实 Profile 名称。
+将 `collection-work` 替换为交付方提供的真实 Profile 名称。
 
 先预览：
 
 ```powershell
-python .agents\skills\douyin-intelligence\scripts\initialize.py `
+python .agents\skills\integrated-scraper\scripts\initialize.py `
   --opencli-profile $opencliProfile `
   --scrapling-executable $scraplingExe `
   --output-root $outputRoot
@@ -647,7 +648,7 @@ python .agents\skills\douyin-intelligence\scripts\initialize.py `
 预期状态是 `ready_to_write`。确认无敏感字段后，再写入：
 
 ```powershell
-python .agents\skills\douyin-intelligence\scripts\initialize.py `
+python .agents\skills\integrated-scraper\scripts\initialize.py `
   --opencli-profile $opencliProfile `
   --scrapling-executable $scraplingExe `
   --output-root $outputRoot `
@@ -661,7 +662,7 @@ python .agents\skills\douyin-intelligence\scripts\initialize.py `
 在项目根目录运行：
 
 ```powershell
-python .agents\skills\douyin-intelligence\scripts\pack_doctor.py `
+python .agents\skills\integrated-scraper\scripts\pack_doctor.py `
   --config .\config\collection.local.json
 ```
 
@@ -675,7 +676,7 @@ success
 `awaiting_human`，按输出中的 `checks` 和 `resolution` 逐项处理，不要
 跳过检查开始采集。
 
-## 模块七：绑定专属浏览器并完成抖音登录
+## 模块七：绑定专属浏览器并完成目标账号登录
 
 平台登录态保存在本机专属浏览器中，不保存在 Skill 或 GitHub 仓库中。新电脑
 必须重新登录一次。
@@ -689,7 +690,7 @@ success
 
 - BrowserHarness 可以连接。
 - 远程调试只监听本机回环地址。
-- 抖音登录态保留在该浏览器本机 Profile。
+- 任务所需的平台登录态保留在该浏览器本机 Profile。
 - 执行任务时保持浏览器运行。
 
 ### 7.2 允许本机远程调试
@@ -715,15 +716,15 @@ success
 > 远程调试让获授权的本机工具控制浏览器并读取该浏览器中的页面和站点数据。
 > 只对专属浏览器开启，只允许本机 `127.0.0.1:9222`，并只向可信项目授权。
 
-### 7.3 登录抖音
+### 7.3 登录任务需要的账号
 
-登录只能由使用者在专属浏览器中完成。Codex 负责打开页面和登录后复检，
-不接收账号凭据。
+需要登录时，只能由使用者在专属浏览器中完成。Codex 负责打开目标页面和
+登录后复检，不接收账号凭据。目标页面不要求登录时，不需要执行本节。
 
-1. 让 Codex 使用 BrowserHarness 打开抖音登录页。
+1. 让 Codex 使用 BrowserHarness 打开本次目标网站或平台的登录页。
 2. 在专属浏览器中人工输入账号信息。
 3. 人工完成二维码、短信验证码、设备确认或其他平台验证。
-4. 确认抖音页面已经进入登录后状态。
+4. 确认目标页面已经进入登录后状态。
 5. 保持浏览器窗口打开。
 6. 回到原来的 Codex 任务，回复：
 
@@ -736,12 +737,12 @@ Codex 会复检同一个 Profile 和 CDP 会话，然后继续同一个任务。
 
 ### 7.4 理解 `awaiting_human`
 
-看到 `awaiting_human` 不是程序失败。它表示系统正确地停在必须由人完成的
+看到 `awaiting_human` 不是程序失败。它表示 Skill 正确地停在必须由人完成的
 安全边界。
 
 常见原因包括：
 
-- 抖音未登录或会话过期。
+- 本次目标账号未登录或会话过期。
 - 页面出现验证码。
 - 平台要求设备验证。
 - Chrome 远程调试未允许。
@@ -756,10 +757,10 @@ Codex 会复检同一个 Profile 和 CDP 会话，然后继续同一个任务。
 
 ### 8.1 先理解哪些内容由你决定
 
-Skill 不自带固定的品牌和商业结论。每次任务都以你当前输入的自然语言为准，
-至少需要能判断以下内容：
+Skill 不自带固定平台、品牌和商业结论。每次任务都以你当前输入的自然语言
+为准，至少需要能判断以下内容：
 
-- **研究对象**：账号、品牌、产品、关键词、话题或具体作品 URL。
+- **目标来源与对象**：网站、平台、账号、品牌、产品、关键词、话题或具体 URL。
 - **分析目标**：你想发现需求、问题、竞品比较、内容机会还是潜客信号。
 - **时间范围**：例如最近 7 天、30 天或指定日期。
 - **业务视角**：谁要使用结果，以及准备用它做什么决策。
@@ -773,7 +774,7 @@ Skill 不自带固定的品牌和商业结论。每次任务都以你当前输�
 在同一个项目中创建新聊天，发送：
 
 ```text
-@douyin-intelligence
+@integrated-scraper
 
 任务：
 分析抖音中与“露营投影仪”相关的公开作品和评论，找到用户在亮度、
@@ -793,44 +794,44 @@ Skill 不自带固定的品牌和商业结论。每次任务都以你当前输�
 不要私信、评论、关注、购买或修改账号设置。
 ```
 
-这只是一个结构完整的示范。将研究对象、分析目标、时间范围和业务视角换成
-你自己的内容，就会形成一个新的独立任务。
+这只是一个结构完整的抖音任务示范。将目标来源、研究对象、分析目标、时间
+范围和业务视角换成自己的内容，就会形成一个新的独立任务。
 
-### 8.3 Magewell 只是一个示例任务
+### 8.3 平台只是任务来源
 
-如果你的真实任务恰好是原来跑通过的 Magewell 场景，可以这样输入：
+如果下一次需要抓取 X，可以直接更换目标来源，不需要配置新的平台模块：
 
 ```text
-@douyin-intelligence
+@integrated-scraper
 
-分析抖音账号“美乐威 Magewell”近 30 天的作品和公开评论，
-找到真实用户需求，并提炼可供千视参考的产品、销售和内容机会。
+抓取 X 上最近 14 天关于“wireless video latency”的公开讨论，区分真实使用
+问题、方案比较和普通转发，并输出证据表和机会摘要。
 ```
 
-这段内容的作用是展示如何指定“研究对象 + 时间范围 + 分析目标 + 业务
-视角”。它不会成为下一次任务的默认值，也不会限制其他用户研究自己的
-品牌、账号或话题。
+这段内容只展示如何指定“目标来源 + 研究对象 + 时间范围 + 结果用途”。
+抖音和 X 都只是示例，不会成为默认平台，也不会限制用户抓取其他公开来源。
 
 ### 8.4 每次任务都可以不同
 
-Skill 固定的是证据和安全工作流，不是固定的问题。后续可以更换任务，例如：
+Skill 固定的是抓取、证据和安全工作流，不是平台或问题。后续可以更换任务，
+例如：
 
 ```text
-@douyin-intelligence
+@integrated-scraper
 检查抖音账号“某品牌官方旗舰店”最近 14 天评论中关于安装复杂度和售后
 响应的负面需求，按紧急程度和品牌团队可行动性排序。
 ```
 
 ```text
-@douyin-intelligence
+@integrated-scraper
 围绕关键词“无线图传延迟”寻找正在比较不同解决方案的真实用户表达，
 区分明确采购意图、技术调研和普通讨论。
 ```
 
 ```text
-@douyin-intelligence
-分析这条作品及其公开评论：https://www.douyin.com/video/<实际作品ID>
-找出适合客服团队制作 FAQ 的高频问题，不要扩展到其他作品。
+@integrated-scraper
+抓取我提供的产品页面、帮助中心和公开论坛 URL，找出适合客服团队制作 FAQ
+的高频问题，不要扩展到未提供的来源。
 ```
 
 ### 8.5 运行中需要人工操作时
@@ -847,14 +848,14 @@ Skill 固定的是证据和安全工作流，不是固定的问题。后续可�
 
 ### 8.6 判断结果是否合格
 
-合格报告以情报内容为主，执行动作只作为审计记录。
+合格报告以抓取证据和证据分析为主，执行动作只作为审计记录。
 
 报告必须回答：
 
 - 用户具体遇到了什么问题或表达了什么需求。
 - 该表达为什么与本次分析目标和业务视角有关。
 - 用户指定的团队或决策者可以采取什么动作。
-- 证据来自哪个作品或评论。
+- 证据来自哪个页面、内容或评论。
 - 哪些内容是已确认、合理推断或待确认。
 - 本次有哪些页面、评论或轮次没有得到充分评估。
 
@@ -894,7 +895,7 @@ GitHub。
 │       └── <task-id>/
 │           └── summary.json
 └── reports/
-    └── <YYYY-MM-DD>-<task-slug>-douyin-intelligence.md
+    └── <YYYY-MM-DD>-<task-slug>-integrated-scraper.md
 ```
 
 `task.json` 保存本次研究对象、分析目标、时间范围、业务视角和成功条件。
@@ -919,7 +920,7 @@ GitHub。
 运行结束前，Skill 会执行：
 
 ```powershell
-python .agents\skills\douyin-intelligence\scripts\validate_run.py `
+python .agents\skills\integrated-scraper\scripts\validate_run.py `
   --rounds-dir <本次rounds目录> `
   --summary <本次summary.json>
 ```
@@ -937,11 +938,11 @@ python .agents\skills\douyin-intelligence\scripts\validate_run.py `
 
 每次使用前完成以下检查：
 
-1. 打开 Codex 和 `douyin-intelligence-skill` 项目。
+1. 打开 Codex 和 `integrated-scraper-skill` 项目。
 2. 启动专属浏览器。
-3. 确认抖音仍为登录状态。
+3. 确认本次需要访问的目标账号仍为登录状态。
 4. 确认远程调试仍为 `127.0.0.1:9222`。
-5. 使用 `@douyin-intelligence` 输入本次新任务。
+5. 使用 `@integrated-scraper` 输入本次新任务。
 6. 检查报告中的时间范围和“本次新增”是否准确。
 
 ### 10.2 更新项目
@@ -959,19 +960,19 @@ git pull --ff-only
 如果 `git status -sb` 显示你修改了仓库源文件，先让维护人员检查，不要直接
 覆盖。
 
-### 10.3 从旧的 Magewell 调用名升级
+### 10.3 从旧调用名升级
 
-早期版本使用 `@magewell-douyin-intelligence`，并把默认输出目录命名为
-`D:\magewell-douyin-output`。升级后按以下步骤切换：
+早期版本使用 `@magewell-douyin-intelligence` 或 `@douyin-intelligence`。
+升级后按以下步骤切换：
 
 1. 运行 `git pull --ff-only`。
 2. 完全关闭并重新打开 Codex 项目。
-3. 输入 `@`，确认出现 `douyin-intelligence`。
-4. 后续任务改用 `@douyin-intelligence`。
+3. 输入 `@`，确认出现 `integrated-scraper`。
+4. 后续任务改用 `@integrated-scraper`。
 5. 保留现有 `config\collection.local.json`，不需要为了改名而覆盖配置。
 
 已有本机配置会继续使用原来的输出目录，历史数据不会自动移动或改名。新电脑
-或新配置才默认使用 `D:\douyin-intelligence-output`。如需迁移历史数据，
+或新配置才默认使用 `D:\integrated-scraper-output`。如需迁移历史数据，
 先备份并由维护人员确认源目录和目标目录，不要在初始化过程中自动搬移。
 
 ### 10.4 更换新电脑
@@ -982,7 +983,7 @@ git pull --ff-only
 2. 重新克隆公开仓库。
 3. 重新安装获准的外部依赖。
 4. 由交付方重新提供或确认 OpenCLI Profile。
-5. 在新电脑专属浏览器中重新登录抖音。
+5. 在新电脑专属浏览器中重新登录任务需要的账号。
 6. 重新运行初始化和全量检查。
 
 不要复制：
@@ -1020,7 +1021,7 @@ Python、Node.js、BrowserHarness、Scrapling 或其他用户级 Skill，也不�
 
 ```powershell
 Get-Location
-Test-Path .\.agents\skills\douyin-intelligence\SKILL.md
+Test-Path .\.agents\skills\integrated-scraper\SKILL.md
 ```
 
 处理方法：
@@ -1028,7 +1029,7 @@ Test-Path .\.agents\skills\douyin-intelligence\SKILL.md
 1. 在 Codex 中重新打开仓库根目录。
 2. 确认 `Test-Path` 返回 `True`。
 3. 重启 Codex。
-4. 输入 `@` 搜索 `douyin-intelligence`。
+4. 输入 `@` 搜索 `integrated-scraper`。
 
 ### 11.2 `python` 不是可识别命令
 
@@ -1108,7 +1109,7 @@ Test-Path .\runtime\scrapling-venv\Scripts\scrapling.exe
 先运行全量检查：
 
 ```powershell
-python .agents\skills\douyin-intelligence\scripts\pack_doctor.py `
+python .agents\skills\integrated-scraper\scripts\pack_doctor.py `
   --config .\config\collection.local.json
 ```
 
@@ -1145,7 +1146,7 @@ python .agents\skills\douyin-intelligence\scripts\pack_doctor.py `
 初始化时指定用户文档目录：
 
 ```powershell
-$outputRoot = Join-Path $env:USERPROFILE "Documents\douyin-intelligence-output"
+$outputRoot = Join-Path $env:USERPROFILE "Documents\integrated-scraper-output"
 ```
 
 把 `$outputRoot` 作为 `--output-root` 的值，或在 Codex 初始化对话中明确告诉
@@ -1160,7 +1161,7 @@ git --version
 ```
 
 然后在浏览器中确认
-[项目仓库](https://github.com/DDDDanteeeeeee/douyin-intelligence-skill)
+[项目仓库](https://github.com/DDDDanteeeeeee/integrated-scraper-skill)
 可以访问。公开克隆不需要 GitHub 登录。
 
 如果企业网络阻止 GitHub，由 IT 提供允许的代理或内部镜像。不要从不明来源
@@ -1180,7 +1181,7 @@ git --version
 - [ ] Git、Node.js、npm 和 Python 版本检查成功。
 - [ ] 公开仓库克隆成功。
 - [ ] Codex 打开的是仓库根目录。
-- [ ] `@douyin-intelligence` 可以被选择。
+- [ ] `@integrated-scraper` 可以被选择。
 
 ### 12.2 依赖验收
 
@@ -1201,7 +1202,7 @@ git --version
 
 - [ ] 专属浏览器已经绑定。
 - [ ] CDP 只监听本机 `127.0.0.1:9222`。
-- [ ] 抖音账号由使用者人工登录。
+- [ ] 任务需要的目标账号由使用者人工登录。
 - [ ] 验证码和 MFA 没有发送给 Codex。
 - [ ] `config\collection.local.json` 不含敏感字段。
 - [ ] 本机配置、运行数据和报告不会被 Git 提交。
@@ -1240,8 +1241,8 @@ git --version
 - [OpenAI Build skills](https://learn.chatgpt.com/docs/build-skills)
 - [项目 README](../README.md)
 - [依赖安装清单](../dependencies.manifest.json)
-- [项目级 Skill](../.agents/skills/douyin-intelligence/SKILL.md)
-- [采集与状态契约](../.agents/skills/douyin-intelligence/references/collection-contract.md)
+- [项目级 Skill](../.agents/skills/integrated-scraper/SKILL.md)
+- [采集与状态契约](../.agents/skills/integrated-scraper/references/collection-contract.md)
 
 ## 下一步
 

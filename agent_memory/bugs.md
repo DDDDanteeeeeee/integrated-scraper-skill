@@ -2,27 +2,30 @@
 
 ## 当前风险
 
+- 远程仓库尚未更名，当前文档中的新 GitHub 地址只有在完成仓库更名后才生效。
+- 草稿 PR #1 仍承载旧的抖音限定定位，不能直接当作本次综合抓取版本发布。
+- GitHub CLI 中 `DDDDanteeeeeee` 的原授权令牌已失效；已打开独立可见的设备
+  授权窗口，必须由用户完成 GitHub 官方授权后才能更名、推送和处理 PR。
+- 当前 Codex 内置 Python 缺少 PyYAML，官方 `quick_validate.py` 尚未补跑；
+  19 项单元测试和其中的元数据约束测试已经通过。
+- 已安装旧调用名的电脑需要更新仓库并重启 Codex；现有本机配置和历史输出
+  不会自动改名或迁移。
+- `current_primary_evidence` 是对旧输出键
+  `current_douyin_primary_evidence` 的通用化改名；旧运行目录不应在没有迁移的
+  情况下用新版校验器重新声明为成功。
 - OpenCLI Profile 可能失效或连接中断；空载荷必须标为未评估，不得声称无变化。
-- BrowserHarness 本机后台可能在单次调用后超时；不得把该故障归为登录失败或内容不存在。
+- BrowserHarness 本机后台可能在单次调用后超时；不得把该故障归为登录失败或
+  内容不存在。
 - 原始评论可能包含公开昵称和业务表述，属于本地运行数据，不得进入 GitHub。
-- 外部依赖的代码、安装方式与许可证不能假定可再分发；Skill Pack 只锁定其角色和确认边界，不能静默复制或安装。
-- 第三方依赖的安装命令可能随上游变化；交付手册提供当前可用路径，但运行时仍应以 `dependencies.manifest.json` 和各上游官方说明为准。
-- 当前 Skill Pack 不自动创建每 24 小时定时任务；必须先完成新电脑上的人工登录和首轮真实验收，再单独评估定时执行边界。
-- 调用名已从 `magewell-douyin-intelligence` 改为 `douyin-intelligence`；
-  已安装旧版的电脑需要更新仓库并重启 Codex，现有本机配置和历史输出不会
-  自动改名或迁移。
+- 外部依赖的安装方式、版本和许可证可能变化；运行时仍须以依赖清单和上游
+  官方说明为准，并在安装前取得用户确认。
 
 ## 已处理问题
 
-- 交付手册、Skill 名称和元数据曾把 Magewell 示例写成固定业务对象；现已
-  通用化研究对象、业务视角、输出路径和报告名，并新增任务级数据隔离校验。
-- 已将独立前端和云端控制平面从当前交付范围移除。
+- 已撤回把目标平台设计成强制字段、平台一致性校验和平台系统命名的错误方向。
+- 已将项目定位收窄为综合抓取 Skill，明确不是独立应用或平台管理系统。
+- 已移除 Magewell 作为产品定位或默认任务的表达。
+- 已保留登录、验证码、MFA、CDP、本机数据和只读抓取安全边界。
 - 示例占位配置不会被误判为可用；敏感配置字段会被本机检查拒绝。
-- 原 `dependencies.lock.json` 容易被误解为第三方可复现锁定；已更正为含来源、许可证、版本策略和人工确认动作的 `dependencies.manifest.json`。
-- 依赖检查此前只强制验证 OpenCLI；已替换为完整 `pack_doctor.py`，并覆盖 BrowserHarness、last30days、last30days-cn、Scrapling 和 Cloakbrowser 的边界状态。
-- CDP 曾可接受任意 HTTP 地址，初始化器也可写入任意路径；现已限制为本机回环 CDP 与项目内本机配置文件。
-- 用户已明确选择 MIT 并完成公开发布；远程仓库已核验公开可见、许可证识别正常且首个 GitHub Actions 校验通过。
-- 官方校验器在 Windows 默认 GBK 环境无法读取 UTF-8 中文文件；以 `PYTHONUTF8=1` 运行后已通过，属于工具编码兼容性而非 Skill 结构错误。
-- GitHub App 创建 PR 时返回 `403 Resource not accessible by integration`；
-  已按 GitHub 发布 Skill 的回退规则使用重新授权的 GitHub CLI 成功创建草稿
-  PR #1。
+- 完整依赖检查继续覆盖 OpenCLI、BrowserHarness、last30days、
+  last30days-cn、Scrapling 和条件化 Cloakbrowser。

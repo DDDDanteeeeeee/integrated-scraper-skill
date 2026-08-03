@@ -1,35 +1,49 @@
-# Douyin Intelligence Skill
+# Integrated Scraper Skill
 
-用于 Codex 的项目级 Skill：根据你每次输入的研究对象和目标，以只读方式
-采集抖音公开作品与评论，识别真实用户需求、问题、机会信号和待复核线索。
+`integrated-scraper` 是一个供 Codex 调用的项目级综合抓取 Skill。它把
+OpenCLI、last30days、last30days-cn、BrowserHarness、Scrapling 和
+Cloakbrowser 编排为六个相互独立的抓取轮次，根据用户当次输入，从公开来源
+获取内容与评论、保留原始证据，并输出结构化数据和基于证据的分析报告。
 
-Skill 固定的是可审计的六轮采集流程、安全边界和报告标准，不固定品牌、
-账号、关键词、受益公司或分析结论。文中出现的具体品牌和受益方都只是示例。
+本项目交付的是抓取能力，不是独立软件、云端控制台、平台管理系统或账号管理
+系统。目标网站、平台和抓取对象由用户在每次任务中自然说明；如果目标页面要求
+登录，用户只需在本机专属浏览器中登录对应账号，再回到原任务继续执行。
 
 ## 从零开始的交付手册
 
 如果你要在一台新 Windows 电脑上交付或使用本项目，请从
-[《抖音公开情报 Skill Pack 新电脑交付与使用手册》](docs/delivery-guide.zh-cn.md)
-开始。手册覆盖 Codex 安装、仓库下载、依赖初始化、专属浏览器登录、
-自定义任务、报告验收、升级、迁移和故障排查。
+[《综合抓取 Skill Pack 新电脑交付与使用手册》](docs/delivery-guide.zh-cn.md)
+开始。手册覆盖 Codex 安装、仓库下载、依赖初始化、专属浏览器登录、任务输入、
+结果验收、升级、迁移和故障排查。
 
-## 功能与边界
+## 交付能力
 
-每次运行都从当前任务提取研究对象、分析目标、时间范围、业务视角和成功
-条件。研究对象可以是抖音账号、品牌、产品、关键词、话题或具体作品 URL。
+用户提供目标来源、抓取对象、时间范围和用途后，Skill 会执行以下工作：
 
-- 固定按六个独立轮次执行：OpenCLI、last30days、last30days-cn、
-  BrowserHarness、Scrapling、Cloakbrowser。
-- OpenCLI 是作品与热门评论主通道；BrowserHarness 只补具体作品评论和
-  登录态证据。
-- 未登录、验证码、设备验证或 CDP 未授权时，状态为 `awaiting_human`。
-  你在专属浏览器完成操作后，在同一任务回复“已登录”即可续跑。
-- 所有报告都附来源、时间、作品链接、采集器、置信度、轮次状态和未评估项。
-  空页面、断连或工具阻塞不等于“没有变化”。
-- 只读采集公开信息。不私信、评论、关注、购买、改账号设置、自动安装依赖
-  或启动定时任务。
-- 原始公开评论和报告只写入你配置的本机输出目录，例如
-  `D:\douyin-intelligence-output`，不会写入本仓库或 GitHub。
+- 按六个独立轮次调用 OpenCLI、last30days、last30days-cn、
+  BrowserHarness、Scrapling 和 Cloakbrowser。
+- 获取与当次任务相关的公开页面、内容、评论和近期趋势补充。
+- 保存原始公开文本、来源 URL、采集时间、采集器、置信度和轮次状态。
+- 从证据中提取需求、问题、比较、使用场景和机会；执行动作只作为审计记录。
+- 将不同任务保存在独立 `task_id` 下，避免跨任务混用对象、证据或结论。
+- 在登录过期、验证码、设备验证或 CDP 未授权时暂停，等待用户完成操作后继续
+  同一任务。
+
+Skill 不维护平台白名单、平台注册表、平台适配器体系或账号库。抖音、X、论坛、
+新闻网站和产品页面都只是可能的任务来源；实际可抓取范围取决于目标页面的公开
+可访问性、已集成工具的能力和用户在本机完成的必要授权。
+
+## 安全与数据边界
+
+以下规则适用于所有目标来源：
+
+- 只读抓取公开或用户已获授权访问的信息。
+- 不私信、评论、关注、购买、发布或修改账号设置。
+- 不读取、保存或上传密码、Cookie、验证码、MFA、Token 或浏览器 Profile。
+- 不绕过登录、验证码或 MFA。出现这些页面时返回 `awaiting_human`。
+- 空页面、断连、登录墙或工具阻塞表示“未评估”，不等于“没有内容”。
+- 原始证据和报告只写入本机输出目录，例如
+  `D:\integrated-scraper-output`，不会写入本仓库或 GitHub。
 
 ## 前置条件
 
@@ -40,51 +54,63 @@ Skill 固定的是可审计的六轮采集流程、安全边界和报告标准�
   Scrapling。
 - Cloakbrowser 是条件化依赖，未遇到明确指纹或反自动化兼容错误时保持
   `compliant_skip`。
-- 每个目标平台使用本机专属浏览器保存登录态；不要向本仓库或 Skill 提供
-  密码、Cookie、验证码、MFA 或浏览器 Profile。
-- 缺少任一实际需要的组件时，该轮必须标为 `blocked_dependency`，不得
-  静默替代或把运行写成成功。
+- 每个需要登录的目标来源使用本机专属浏览器保存登录态。
+- 缺少实际需要的组件时，对应轮次必须标为 `blocked_dependency`，不得用
+  其他工具的结果冒充成功。
 
 ## 一键初始化
 
-初始化只准备本机执行环境，不预设任何研究对象。
+初始化只准备本机执行环境，不预设平台、账号、品牌或研究对象。
 
 1. 安装 Codex，克隆并打开本仓库。
-2. 在 Codex 中调用：
+2. 在 Codex 中发送：
 
    ```text
-   @douyin-intelligence 初始化这个 Skill Pack。
+   @integrated-scraper 初始化这个 Skill Pack。
    ```
 
 3. 查看 Skill 展示的依赖状态、官方来源和安装动作。
-4. 对每项安装分别确认，并提供本机 OpenCLI Profile 名称。
-5. 在专属浏览器完成登录、验证码或 CDP 授权。
-6. 等待全量检查返回 `success`。
-7. 输入你自己的任务，例如：
+4. 对每项外部安装分别确认，并提供本机 OpenCLI Profile 名称。
+5. 在专属浏览器完成 CDP 授权。
+6. 如果目标来源要求登录，在对应页面完成登录或验证码。
+7. 等待全量检查返回 `success`，再输入实际任务。
 
-   ```text
-   @douyin-intelligence
-   分析抖音账号“美乐威 Magewell”近 30 天的作品和公开评论，
-   找到真实用户需求，并提炼可供千视参考的产品、销售和内容机会。
-   ```
+## 任务示例
 
-上例只演示如何写清研究对象、时间范围、分析目标和业务视角。你可以把它
-替换为自己的账号、品牌、产品、关键词、话题、时间范围和决策问题。
+下面的抖音和 X 任务只演示输入方式，不表示 Skill 仅支持这些平台。
+
+```text
+@integrated-scraper
+抓取抖音中与“露营投影仪”相关的近 30 天公开内容和评论，找到用户在亮度、
+续航和户外连接方面的真实需求，并给出附来源链接的产品机会。
+```
+
+```text
+@integrated-scraper
+抓取 X 上最近 14 天关于“wireless video latency”的公开讨论，区分真实使用
+问题、方案比较和普通转发，并输出证据表和机会摘要。
+```
+
+```text
+@integrated-scraper
+抓取我提供的产品页面、帮助中心和公开论坛链接，整理反复出现的安装问题，
+保留原文与 URL，并生成供客服团队使用的 FAQ 机会清单。
+```
 
 ## 高级：非交互初始化
 
-仅在已确认本机 OpenCLI Profile 名称时使用。第一条命令只预览，第二条
-才写入本机配置：
+仅在已确认本机 OpenCLI Profile 名称时使用。第一条命令只预览，第二条才写入
+本机配置：
 
 ```powershell
-python .agents/skills/douyin-intelligence/scripts/initialize.py --opencli-profile <profile>
-python .agents/skills/douyin-intelligence/scripts/initialize.py --opencli-profile <profile> --write-config
+python .agents/skills/integrated-scraper/scripts/initialize.py --opencli-profile <profile>
+python .agents/skills/integrated-scraper/scripts/initialize.py --opencli-profile <profile> --write-config
 ```
 
 随后检查整个 Skill Pack：
 
 ```powershell
-python .agents/skills/douyin-intelligence/scripts/pack_doctor.py --config config/collection.local.json
+python .agents/skills/integrated-scraper/scripts/pack_doctor.py --config config/collection.local.json
 ```
 
 ## 依赖分发
@@ -104,12 +130,12 @@ python .agents/skills/douyin-intelligence/scripts/pack_doctor.py --config config
 
 ## 分发边界
 
-本仓库分发主 Skill、初始化器、安装清单、检查脚本、配置样例和契约。
+本仓库分发主 Skill、初始化器、安装清单、检查脚本、配置样例和采集契约。
 `dependencies.manifest.json` 声明外部依赖的来源、许可证、版本策略和确认
 边界，不复制或静默安装第三方组件。所有 `data/`、`reports/`、浏览器
 Profile、OpenCLI trace、本地配置和账号会话均为本机数据，禁止提交。
 
 ## 发布状态
 
-本项目以 [MIT License](LICENSE) 公开发布。MIT 仅适用于本仓库自身的代码
-与文档；外部执行依赖仍按其各自来源、许可证和安装条款处理。
+本项目以 [MIT License](LICENSE) 公开发布。MIT 仅适用于本仓库自身的代码与
+文档；外部执行依赖仍按其各自来源、许可证和安装条款处理。

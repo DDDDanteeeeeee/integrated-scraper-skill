@@ -1,5 +1,5 @@
 {
-  "output_root": "D:\\douyin-intelligence-output",
+  "output_root": "D:\\integrated-scraper-output",
   "opencli": {
     "command": "opencli",
     "profile": "replace-with-local-profile"

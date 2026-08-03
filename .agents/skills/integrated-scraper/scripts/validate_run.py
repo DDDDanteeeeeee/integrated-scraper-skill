@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate that six-round status records truthfully describe a Douyin run."""
+"""Validate that six-round status records truthfully describe a scraper run."""
 
 from __future__ import annotations
 
@@ -77,8 +77,8 @@ def validate(rounds_dir: Path, summary_path: Path) -> list[str]:
         errors.append(f"无效总体状态：{overall}")
     if any(status in NO_FULL_SUCCESS for status in statuses) and overall == "success":
         errors.append("存在部分成功、阻塞或失败轮次时总体状态不得为 success")
-    if summary.get("current_douyin_primary_evidence") is not True and overall == "success":
-        errors.append("主抖音证据未明确存在时总体状态不得为 success")
+    if summary.get("current_primary_evidence") is not True and overall == "success":
+        errors.append("主证据未明确存在时总体状态不得为 success")
     if summary.get("task_id") != task_id:
         errors.append("summary.task_id 与 task.json 不一致")
     if summary.get("target") != task_target:

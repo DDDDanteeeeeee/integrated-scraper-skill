@@ -1,0 +1,7 @@
+interface:
+  display_name: "综合抓取"
+  short_description: "集成多种抓取工具，采集可审计的跨来源公开证据"
+  default_prompt: "Use $integrated-scraper to collect and analyze public evidence for the target I provide."
+
+policy:
+  allow_implicit_invocation: false

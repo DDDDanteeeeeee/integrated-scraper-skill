@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "manifest_type": "installation-manifest",
-  "pack_id": "douyin-intelligence",
+  "pack_id": "integrated-scraper",
   "supported_platform": "windows",
   "python_requirement": ">=3.12",
   "installation_policy": "plan-first-and-confirm-per-dependency",
@@ -9,7 +9,7 @@
     {
       "id": "opencli",
       "kind": "local_cli",
-      "role": "作品与热门评论主采集",
+      "role": "目标内容与公开评论主采集",
       "required": true,
       "distribution": "operator-provided",
       "source_url": null,
@@ -19,12 +19,12 @@
       "configuration_fields": ["opencli.command", "opencli.profile"],
       "verification": "command-and-profile",
       "installation": null,
-      "setup_note": "由使用者提供已获授权的 OpenCLI 安装与 Profile；Skill Pack 不下载、导出或迁移 Profile。"
+      "setup_note": "由使用者提供已获授权的 OpenCLI 安装与 Profile；综合抓取 Skill 不下载、导出或迁移 Profile。"
     },
     {
       "id": "browser-harness",
       "kind": "codex_skill_and_local_cli",
-      "role": "登录态核验与具体作品评论补充",
+      "role": "登录态核验与可见页面证据补充",
       "required": true,
       "distribution": "upstream-install",
       "source_url": "https://github.com/browser-use/browser-harness",

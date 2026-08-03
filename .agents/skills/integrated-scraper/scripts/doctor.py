@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check local, non-secret prerequisites for the Douyin intelligence skill."""
+"""Check local, non-secret prerequisites for the integrated scraper skill."""
 
 from __future__ import annotations
 

@@ -1,9 +1,10 @@
 # Integrated Scraper Skill
 
 `integrated-scraper` 是一个供 Codex 调用的项目级综合抓取 Skill。它把
-OpenCLI、last30days、last30days-cn、BrowserHarness、Scrapling 和
-Cloakbrowser 编排为六个相互独立的抓取轮次，根据用户当次输入，从公开来源
-获取内容与评论、保留原始证据，并输出结构化数据和基于证据的分析报告。
+OpenCLI、last30days、last30days-cn、BrowserHarness、Scrapling、yt-dlp 和
+Cloakbrowser 组成一个动态能力池。Skill 会先把任务拆成原子需求，再为每项选择
+最强工具；只有主工具失败或结果未通过验收时才降级。它从公开来源获取内容与
+评论、保留原始证据，并输出结构化数据和基于证据的分析报告。
 
 本项目交付的是抓取能力，不是独立软件、云端控制台、平台管理系统或账号管理
 系统。目标网站、平台和抓取对象由用户在每次任务中自然说明；如果目标页面要求
@@ -20,11 +21,15 @@ Cloakbrowser 编排为六个相互独立的抓取轮次，根据用户当次输�
 
 用户提供目标来源、抓取对象、时间范围和用途后，Skill 会执行以下工作：
 
-- 按六个独立轮次调用 OpenCLI、last30days、last30days-cn、
-  BrowserHarness、Scrapling 和 Cloakbrowser。
+- 把任务拆成可独立验收的原子需求，并比较全部工具的能力、质量、成本、登录
+  条件、就绪度、权限风险和历史执行效果。
+- 每项默认只执行得分最高的主工具；失败或验收不通过时才按排名降级。
 - 获取与当次任务相关的公开页面、内容、评论和近期趋势补充。
-- 保存原始公开文本、来源 URL、采集时间、采集器、置信度和轮次状态。
+- 保存原始公开文本、来源 URL、采集时间、采集器、置信度和实际执行状态。
 - 从证据中提取需求、问题、比较、使用场景和机会；执行动作只作为审计记录。
+- 面向用户的报告先给结论，再给证据、限制和下一步；使用直接、易懂的语言，原始证据和技术字段保持原样。
+- 白话表达只调整说明文字，不改变证据、字段、状态值、表格列、JSON 键或校验文件。
+- 空数组或空正文只有在页面明确证明 0 条时才算“无数据”；采集失败导致的空结果必须标为未评估、失败或阻塞。
 - 将不同任务保存在独立 `task_id` 下，避免跨任务混用对象、证据或结论。
 - 在登录过期、验证码、设备验证或 CDP 未授权时暂停，等待用户完成操作后继续
   同一任务。
@@ -50,17 +55,22 @@ Skill 不维护平台白名单、平台注册表、平台适配器体系或账�
 当前发行目标为 Windows 10/11、Codex 和 Python 3.12+。安装 last30days
 系列还需要 Node.js 与 `npx`。
 
-- 初始化检查 OpenCLI、BrowserHarness、last30days、last30days-cn 和
-  Scrapling。
+- 初始化可以检查完整能力库存；正式任务只要求动态计划选中的主工具、交叉核验
+  工具及辅助依赖就绪。YouTube 评论必须保留明确的 `comment_count`，不能把
+  OpenCLI 空数组当成 0 条评论。
 - Cloakbrowser 是条件化依赖，未遇到明确指纹或反自动化兼容错误时保持
   `compliant_skip`。
 - 每个需要登录的目标来源使用本机专属浏览器保存登录态。
-- 缺少实际需要的组件时，对应轮次必须标为 `blocked_dependency`，不得用
+- 缺少实际需要的组件时，对应原子任务必须标为 `blocked_dependency`，不得用
   其他工具的结果冒充成功。
 
 ## 一键初始化
 
 初始化只准备本机执行环境，不预设平台、账号、品牌或研究对象。
+
+稳定版准备器及离线验证说明见 [初始化操作说明](docs/bootstrap.zh-cn.md)。
+执行验收使用证据文件、哈希和逐项标准，不再只检查成功标记；旧报告保持原样，
+不自动升级为新标准下的成功结果。
 
 1. 安装 Codex，克隆并打开本仓库。
 2. 在 Codex 中发送：
@@ -70,10 +80,12 @@ Skill 不维护平台白名单、平台注册表、平台适配器体系或账�
    ```
 
 3. 查看 Skill 展示的依赖状态、官方来源和安装动作。
-4. 对每项外部安装分别确认，并提供本机 OpenCLI Profile 名称。
+4. 对每项外部安装分别确认。端口和 OpenCLI Profile 不再临时填写，项目会按
+   固定运行契约准备。
 5. 在专属浏览器完成 CDP 授权。
 6. 如果目标来源要求登录，在对应页面完成登录或验证码。
-7. 等待全量检查返回 `success`，再输入实际任务。
+7. 输入实际任务。Skill 会生成动态执行计划，并只检查本次选中的工具；未选工具
+   不会阻塞任务。
 
 ## 任务示例
 
@@ -99,19 +111,37 @@ Skill 不维护平台白名单、平台注册表、平台适配器体系或账�
 
 ## 高级：非交互初始化
 
-仅在已确认本机 OpenCLI Profile 名称时使用。第一条命令只预览，第二条才写入
-本机配置：
+固定参数见 [`runtime.contract.json`](runtime.contract.json) 和
+[《固定运行参数》](docs/runtime-parameters.zh-cn.md)。第一条命令只预览，第二条
+才写入本机配置：
 
 ```powershell
-python .agents/skills/integrated-scraper/scripts/initialize.py --opencli-profile <profile>
-python .agents/skills/integrated-scraper/scripts/initialize.py --opencli-profile <profile> --write-config
+python .agents/skills/integrated-scraper/scripts/initialize.py
+python .agents/skills/integrated-scraper/scripts/initialize.py --write-config
 ```
 
 随后检查整个 Skill Pack：
 
 ```powershell
-python .agents/skills/integrated-scraper/scripts/pack_doctor.py --config config/collection.local.json
+powershell -ExecutionPolicy Bypass -File .agents/skills/integrated-scraper/scripts/start_runtime.ps1
 ```
+
+正式任务会先创建 `task.json` 和 `execution_plan.json`，再执行任务范围检查：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .agents/skills/integrated-scraper/scripts/invoke_project_python.ps1 .agents/skills/integrated-scraper/scripts/plan_run.py --task <task.json> --output <execution_plan.json>
+powershell -ExecutionPolicy Bypass -File .agents/skills/integrated-scraper/scripts/start_runtime.ps1 -PlanPath <execution_plan.json>
+```
+
+本项目运行时固定使用仓库内的 `runtime/chrome-public-profile`、OpenCLI Profile
+`integrated-scraper-9222` 和本机 `http://127.0.0.1:9222`。`9223` 明确保留给
+其他项目，脚本不会连接、关闭或复用它。需要单独重新打开浏览器时运行：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .agents/skills/integrated-scraper/scripts/start_project_chrome.ps1
+```
+
+脚本发现 9222 被其他 Chrome 占用时会停止并提示，不会关闭其他项目的浏览器。
 
 ## 依赖分发
 
@@ -126,6 +156,7 @@ python .agents/skills/integrated-scraper/scripts/pack_doctor.py --config config/
 | last30days | [上游项目](https://github.com/mvanhorn/last30days-skill)（MIT） | 用户确认后按上游 `npx skills add` 安装。 |
 | last30days-cn | [上游项目](https://github.com/Jesseovo/last30days-skill-cn)（MIT） | 用户确认后安装公开 Skill；不配置其可选 API 凭据。 |
 | Scrapling | [官方文档](https://scrapling.readthedocs.io/en/latest/)（BSD-3-Clause） | 用户确认后在隔离虚拟环境安装；不传 Cookie、代理凭据或 API Key。 |
+| yt-dlp | [上游项目](https://github.com/yt-dlp/yt-dlp)（Unlicense） | 用户确认后安装到项目独立 Python 环境，用于 YouTube 搜索、字幕和评论计数。 |
 | Cloakbrowser | [官方渠道](https://cloakbrowser.dev/) | 只在明确兼容错误时提示用户自行获取；不得捆绑、预装或重分发。 |
 
 ## 分发边界

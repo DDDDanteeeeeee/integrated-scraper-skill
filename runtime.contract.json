@@ -1,0 +1,111 @@
+{
+  "schema_version": 2,
+  "project_id": "integrated-scraper",
+  "supported_platform": "windows",
+  "browser": {
+    "executable_default": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+    "remote_debugging_address": "127.0.0.1",
+    "remote_debugging_port": 9222,
+    "cdp_url": "http://127.0.0.1:9222",
+    "profile_relative_path": "runtime/chrome-public-profile",
+    "forbidden_ports": [9223]
+  },
+  "opencli": {
+    "profile": "integrated-scraper-9222",
+    "daemon_port": 19825,
+    "cache_relative_path": "runtime/opencli-cache",
+    "window": "background",
+    "connect_timeout_seconds": 45,
+    "command_timeout_seconds": 60,
+    "format": "json",
+    "trace": "retain-on-failure",
+    "site_session": "persistent",
+    "keep_tab": true,
+    "facebook_group_batch_size": 20
+  },
+  "browser_harness": {
+    "cdp_url": "http://127.0.0.1:9222",
+    "workspace_relative_path": "runtime/browser-harness-workspace",
+    "domain_skills": false
+  },
+  "python": {
+    "executable_relative_path": "runtime/python-env/Scripts/python.exe",
+    "playwright_browsers_relative_path": "runtime/ms-playwright"
+  },
+  "cloakbrowser": {
+    "mode": "conditional",
+    "remote_debugging_address": "127.0.0.1",
+    "remote_debugging_port": 9242,
+    "cdp_url": "http://127.0.0.1:9242"
+  },
+  "execution": {
+    "browser_controller_concurrency": 1,
+    "routing_mode": "atomic-best-tool",
+    "default_duplicate_execution": false,
+    "max_recovery_attempts_per_tool": 2,
+    "fallback_triggers": ["execution_failed", "acceptance_failed"],
+    "cross_validation_triggers": ["high_risk", "user_requested", "conflicting_evidence"]
+  },
+  "tool_routing": {
+    "score_scale": {"min": 0, "max": 5},
+    "weights": {
+      "success_probability": 25,
+      "data_quality": 20,
+      "direct_usability": 15,
+      "browser_login_fit": 10,
+      "cost_efficiency": 10,
+      "runtime_readiness": 10,
+      "permission_risk_fit": 5,
+      "historical_performance": 5
+    },
+    "allowed_dependencies": [
+      "opencli",
+      "browser-harness",
+      "last30days",
+      "last30days-cn",
+      "scrapling",
+      "playwright",
+      "yt-dlp",
+      "cloakbrowser"
+    ],
+    "tools": {
+      "scrapling": {
+        "base_dependencies": ["scrapling"],
+        "capabilities": ["public_url_body", "site_discovery", "sitemap", "bulk_public_crawl", "structured_public_fields", "adaptive_selectors"]
+      },
+      "opencli": {
+        "base_dependencies": ["opencli"],
+        "capabilities": ["existing_platform_adapter", "platform_search", "platform_posts", "platform_comments", "platform_business_objects"]
+      },
+      "browser-harness": {
+        "base_dependencies": ["browser-harness"],
+        "capabilities": ["authenticated_interaction", "login_check", "click", "scroll", "filter_switch", "visible_validation", "screenshot"]
+      },
+      "last30days": {
+        "base_dependencies": ["last30days"],
+        "capabilities": ["overseas_trends_last_30_days"]
+      },
+      "last30days-cn": {
+        "base_dependencies": ["last30days-cn"],
+        "capabilities": ["chinese_trends_last_30_days"]
+      },
+      "cloakbrowser": {
+        "base_dependencies": ["cloakbrowser"],
+        "capabilities": ["explicit_browser_fingerprint_compatibility"]
+      }
+    }
+  },
+  "tested_versions": {
+    "chrome": "151.0.7922.108",
+    "node": "24.15.0",
+    "opencli": "1.8.6",
+    "opencli_extension": "1.0.24",
+    "browser_harness": "0.1.8",
+    "last30days": "3.3.2",
+    "last30days_cn": "3.0.0-cn",
+    "python": "3.13.13",
+    "scrapling": "0.4.13",
+    "playwright": "1.62.0",
+    "yt_dlp": "2026.07.04"
+  }
+}

@@ -35,7 +35,7 @@ Codex、Git、Python 和 Node.js 的 Windows 电脑开始，完成项目下载�
 - 读取与当次任务相关的公开页面、内容和可见公开评论。
 - 从公开内容中提取真实使用场景、故障、选型、价格、试用、部署和替代需求。
 - 按你本次指定的决策场景识别产品、销售、内容或市场机会。
-- 按六个独立轮次保留采集状态、来源、时间和恢复条件。
+- 按原子需求动态选择最强工具，并保留实际执行状态、来源、时间和恢复条件。
 - 将原始证据、处理中间文件和专业报告保存在指定的本机目录。
 - 在登录过期或出现验证码时暂停，等你完成操作后继续同一个任务。
 - 根据目标来源选择已集成工具能够执行的抓取路径，不要求你配置平台适配器。
@@ -65,7 +65,7 @@ Codex、Git、Python 和 Node.js 的 Windows 电脑开始，完成项目下载�
 | Codex 桌面应用 | 使用者 | 能登录并打开本地项目目录。 |
 | Git、Python、Node.js | 使用者或 IT | 命令行版本检查成功。 |
 | OpenCLI 命令 | 交付方或获授权管理员 | 本机能执行 OpenCLI。 |
-| OpenCLI Profile 名称 | 交付方或获授权管理员 | 提供真实 Profile 名称，不提供密码或 Cookie。 |
+| OpenCLI Profile | Codex 按项目契约绑定 | 固定别名为 `integrated-scraper-9222`，不接收密码或 Cookie。 |
 | 目标账号登录 | 使用者 | 在需要登录的目标页面中人工完成。 |
 | 验证码、设备验证 | 使用者 | 只在平台页面中操作。 |
 | 抓取任务 | 使用者 | 每次说明来源、对象、时间范围和结果用途。 |
@@ -73,7 +73,8 @@ Codex、Git、Python 和 Node.js 的 Windows 电脑开始，完成项目下载�
 <!-- prettier-ignore -->
 > [!WARNING]
 > OpenCLI 是主采集通道，但它不是本仓库可再分发的软件。交付方必须另外提供
-> 已获授权的 OpenCLI 安装方式和 Profile 名称。缺少这两项时，环境检查会返回
+> 已获授权的 OpenCLI 安装方式。项目 Chrome 连接后，由 Codex 将该连接绑定为
+> 固定别名 `integrated-scraper-9222`。缺少安装或固定连接时，环境检查会返回
 > `blocked_dependency`，这是正确结果。
 
 ## 模块二：安装 Codex 和基础工具
@@ -332,32 +333,36 @@ integrated-scraper
 在 Codex CLI 或 IDE 扩展中，可以运行 `/skills`，或使用
 `$integrated-scraper` 显式调用。
 
-## 模块四：理解初始化和六轮工作流
+## 模块四：理解动态工具工作流
 
-首次初始化只负责建立可信的本机运行条件。只有全部必需依赖检查通过，Skill
-才会开始采集。
+首次初始化负责建立可信的本机运行条件和完整能力库存。正式任务不会要求所有
+工具同时运行或同时就绪，只检查本次计划真正选择的工具。
 
-### 4.1 六轮的固定顺序
+### 4.1 从原子需求到最强工具
 
-每次业务任务按以下顺序独立执行：
+每次业务任务采用以下流程：
 
 ```text
-01 OpenCLI
-   ↓ 目标内容和公开评论主证据
-02 last30days
-   ↓ 海外近 30 天趋势补充
-03 last30days-cn
-   ↓ 中文公开趋势补充
-04 BrowserHarness
-   ↓ 登录态核验和可见页面证据补充
-05 Scrapling
-   ↓ 已知公开 URL 正文补充
-06 Cloakbrowser
-   ↓ 仅在明确指纹或反自动化兼容错误时触发
+理解任务
+   ↓
+拆成可独立验收的原子需求
+   ↓
+排除能力、授权或证据不匹配的工具
+   ↓
+按成功率、数据质量、可用性、登录条件、成本、就绪度、风险和历史效果评分
+   ↓
+只执行第一名
+   ↓
+结果通过验收？── 是：停止该项
+   │
+   否
+   ↓
+按排名切换下一工具
 ```
 
-每轮都会记录自己的状态和证据。一个工具失败时，不能把另一个工具的结果写成
-它的成功。
+每个工具都必须在计划中标为“候选”或写明“排除原因”。未选工具不会执行，也
+不会因为缺失而把任务变成失败。一个工具失败时，不能把另一个工具的结果写成
+它的成功；但降级工具真实通过验收后，原子需求可以成功，同时保留前一次失败记录。
 
 ### 4.2 依赖角色
 
@@ -365,28 +370,30 @@ integrated-scraper
 [`dependencies.manifest.json`](../dependencies.manifest.json)。
 初始化时以该文件为准。
 
-| 依赖 | 是否必需 | 作用 | 初始化行为 |
+| 依赖 | 任务中何时必需 | 作用 | 初始化行为 |
 | --- | --- | --- | --- |
-| OpenCLI | 是 | 目标内容和公开评论主采集 | 只检查，不由仓库安装。 |
-| BrowserHarness | 是 | 登录态和评论补充 | 确认后按上游安装。 |
-| last30days | 是 | 海外趋势补充 | 确认后安装 Skill。 |
-| last30days-cn | 是 | 中文趋势补充 | 确认后安装 Skill。 |
-| Scrapling | 是 | 已知公开 URL 正文补充 | 确认后在隔离环境安装。 |
+| OpenCLI | 被选中处理已有平台适配器对象时 | 平台搜索、帖子和评论 | 只检查，不由仓库安装。 |
+| BrowserHarness | 被选中处理登录交互或页面可见验收时 | 登录、点击、滚动、截图 | 确认后按上游安装。 |
+| last30days | 被选中处理海外近 30 天趋势时 | 海外趋势研究 | 确认后安装 Skill。 |
+| last30days-cn | 被选中处理中文近 30 天趋势时 | 中文趋势研究 | 确认后安装 Skill。 |
+| Scrapling | 被选中处理公开网页、整站或结构化字段时 | 公开网页抓取 | 确认后在隔离环境安装。 |
+| yt-dlp | 计划中的 YouTube 原子需求明确需要时 | 字幕和评论计数辅助依赖 | 确认后安装到项目独立 Python 环境。 |
 | Cloakbrowser | 条件化 | 指纹兼容问题处理 | 默认不安装、不启动。 |
 
 ### 4.3 什么情况下允许开始采集
 
-只有全量检查返回：
+先生成 `execution_plan.json`，再对计划选择的主工具和辅助依赖执行任务范围检查。
+只有该检查返回：
 
 ```json
 {"status": "success"}
 ```
 
-才允许进入六轮采集。
+才允许开始执行第一个原子需求。
 
 以下结果都表示不能开始：
 
-- `blocked_dependency`：必需软件、命令、Profile 或 Skill 缺失。
+- `blocked_dependency`：本次选中的软件、命令、Profile 或 Skill 缺失。
 - `awaiting_human`：需要登录、验证码、设备验证或 CDP 授权。
 - `invalid_config`：本机配置无效或包含禁止字段。
 
@@ -407,7 +414,7 @@ integrated-scraper
 2. 展示每个依赖的状态、官方来源和安装动作。
 3. 任何外部安装都先向我确认。
 4. 不读取或要求密码、Cookie、验证码、MFA 或浏览器 Profile。
-5. 如果本机没有 D 盘，把输出目录设为我的 Documents\integrated-scraper-output。
+5. 如果本机没有 D 盘，先停止初始化并让维护人员准备 D 盘；不要临时更改固定输出路径。
 ```
 
 ### 5.2 识别第一次暂停
@@ -416,19 +423,18 @@ integrated-scraper
 
 ```text
 awaiting_human
-缺少：opencli.profile
+固定 OpenCLI Profile integrated-scraper-9222 尚未连接
 ```
 
-这表示你必须提供 OpenCLI Profile 名称。
+这表示项目 Chrome 尚未被 OpenCLI 扩展识别，或者其连接还没有绑定为固定别名。
 
 回复示例：
 
 ```text
-OpenCLI Profile 名称是 collection-work。
-只把名称写入项目本机配置，不要读取或导出账号凭据。
+已在项目 Chrome 中允许远程调试并启用 OpenCLI 扩展，请绑定固定 Profile 后复检。
 ```
 
-`collection-work` 只是示例。必须替换成交付方实际提供的 Profile 名称。
+不要输入临时 Profile 名称，也不要把其他项目的 Profile 写进配置。
 
 ### 5.3 逐项批准依赖安装
 
@@ -463,9 +469,11 @@ ready_to_write
 
 - 本机输出目录。
 - OpenCLI 命令。
-- OpenCLI Profile 名称。
+- 固定 OpenCLI Profile `integrated-scraper-9222`。
 - 本机 CDP 地址。
+- 项目 Python 和 Playwright 浏览器路径。
 - Scrapling 可执行文件路径。
+- yt-dlp 可执行文件路径。
 
 预览中不得出现密码、Cookie、Token、session、验证码或 MFA。
 
@@ -478,7 +486,7 @@ ready_to_write
 
 初始化器不会覆盖已存在的 `config/collection.local.json`。
 
-### 5.5 选择输出目录
+### 5.5 固定输出目录
 
 默认输出目录是：
 
@@ -486,19 +494,8 @@ ready_to_write
 D:\integrated-scraper-output
 ```
 
-如果电脑没有 D 盘，在初始化对话中明确指定：
-
-```text
-把本机输出目录设为：
-C:\Users\<我的Windows用户名>\Documents\integrated-scraper-output
-```
-
-也可以使用 PowerShell 获取当前用户目录：
-
-```powershell
-$outputRoot = Join-Path $env:USERPROFILE "Documents\integrated-scraper-output"
-$outputRoot
-```
+输出目录属于运行契约，普通任务不能临时改到 C 盘。电脑没有 D 盘时，初始化
+应返回阻塞状态，由维护人员先创建或挂载 D 盘，再重新验收。
 
 ## 模块六：必要时手工安装和配置依赖
 
@@ -511,11 +508,12 @@ OpenCLI 不是本仓库的一部分。交付方需要提供：
 
 1. 获授权的安装包或内部安装方法。
 2. 可执行命令名称或绝对路径。
-3. 可使用的 Profile 名称。
-4. 获准访问的目标来源范围。
+3. 获准访问的目标来源范围。
 
 安装后在 PowerShell 中测试交付方提供的命令。不要在本手册中猜测 OpenCLI
-参数，也不要把账号凭据写入 `collection.local.json`。
+参数，也不要把账号凭据写入 `collection.local.json`。项目 Chrome 启动并被
+OpenCLI 扩展识别后，该连接必须绑定为固定别名 `integrated-scraper-9222`；后续
+每条 OpenCLI 命令显式传入该 Profile，不修改全局默认 Profile。
 
 ### 6.2 安装 BrowserHarness
 
@@ -591,27 +589,47 @@ $last30daysCnFound
 
 ### 6.5 在隔离环境安装 Scrapling
 
+推荐优先使用 [稳定版初始化准备器](bootstrap.zh-cn.md)，它会生成下面所需的
+项目包装入口，并在明确确认后安装 Python 工具。以下手动步骤仅供维护排查使用；
+单独执行 pip 不会生成项目自定义的 `.cmd` 入口。
+
 在项目根目录运行：
 
 ```powershell
-python -m venv .\runtime\scrapling-venv
-.\runtime\scrapling-venv\Scripts\python.exe -m pip install --upgrade pip
-.\runtime\scrapling-venv\Scripts\python.exe -m pip install "scrapling[all]>=0.4.9"
-.\runtime\scrapling-venv\Scripts\scrapling.exe install
+python -m venv .\runtime\python-env
+.\runtime\python-env\Scripts\python.exe -m pip install --upgrade pip
+.\runtime\python-env\Scripts\python.exe -m pip install "scrapling[all]==0.4.13" "playwright==1.62.0" "yt-dlp==2026.7.4"
+$env:PLAYWRIGHT_BROWSERS_PATH = (Resolve-Path .\runtime).Path + "\ms-playwright"
+.\runtime\python-env\Scripts\python.exe -m playwright install chromium
 ```
 
 确认可执行文件存在：
 
 ```powershell
-Test-Path .\runtime\scrapling-venv\Scripts\scrapling.exe
+python .agents/skills/integrated-scraper/scripts/bootstrap_pack.py --apply
+& .\runtime\bin\scrapling-project.cmd --version
 ```
 
-预期返回 `True`。
+预期返回 Scrapling 版本且退出码为 0。已有自定义入口与模板不同则停止，先人工审查，不覆盖。
 
 `runtime\` 已被 Git 忽略，不会进入公开仓库。初始化配置必须指向这个真实的
 可执行文件，而不是只写一个不存在的 `scrapling` 占位值。
 
-### 6.6 不要预装 Cloakbrowser
+### 6.6 在项目独立环境安装 yt-dlp
+
+YouTube 评论不能只依赖 OpenCLI 的空数组。需要在项目独立 Python 环境安装
+yt-dlp，并保留返回的 `comment_count`。它与 Scrapling、Playwright 共用该项目
+专属 Python 环境，但不与其他项目共用：
+
+```powershell
+& .\runtime\bin\yt-dlp.cmd --version
+```
+
+初始化配置中的 `yt_dlp.executable` 必须指向项目内的 `runtime\bin\yt-dlp.cmd`
+或该独立环境的真实可执行文件。只有明确返回 `comment_count: 0`，才可以写
+`empty_verified`；空数组、超时或页面未渲染都要写 `unassessed`。
+
+### 6.7 不要预装 Cloakbrowser
 
 Cloakbrowser 是条件化路径。正常初始化时，它的正确状态是：
 
@@ -624,46 +642,29 @@ compliant_skip
 
 它不能用于绕过登录、验证码或 MFA。
 
-### 6.7 手工创建本机配置
+### 6.8 手工创建本机配置
 
-只有在 Codex 引导不可用时才执行本节。先定义实际值：
-
-```powershell
-$opencliProfile = "collection-work"
-$scraplingExe = (Resolve-Path .\runtime\scrapling-venv\Scripts\scrapling.exe).Path
-$outputRoot = Join-Path $env:USERPROFILE "Documents\integrated-scraper-output"
-```
-
-将 `collection-work` 替换为交付方提供的真实 Profile 名称。
-
-先预览：
+只有在 Codex 引导不可用时才执行本节。所有运行参数已经固定，不再手工定义：
 
 ```powershell
-python .agents\skills\integrated-scraper\scripts\initialize.py `
-  --opencli-profile $opencliProfile `
-  --scrapling-executable $scraplingExe `
-  --output-root $outputRoot
+python .agents\skills\integrated-scraper\scripts\initialize.py
 ```
 
 预期状态是 `ready_to_write`。确认无敏感字段后，再写入：
 
 ```powershell
-python .agents\skills\integrated-scraper\scripts\initialize.py `
-  --opencli-profile $opencliProfile `
-  --scrapling-executable $scraplingExe `
-  --output-root $outputRoot `
-  --write-config
+python .agents\skills\integrated-scraper\scripts\initialize.py --write-config
 ```
 
 预期状态是 `configured`。
 
-### 6.8 运行全量检查
+### 6.9 运行全量检查
 
 在项目根目录运行：
 
 ```powershell
-python .agents\skills\integrated-scraper\scripts\pack_doctor.py `
-  --config .\config\collection.local.json
+powershell -ExecutionPolicy Bypass -File `
+  .agents\skills\integrated-scraper\scripts\start_runtime.ps1
 ```
 
 如果全部就绪，最外层状态为：
@@ -683,8 +684,9 @@ success
 
 ### 7.1 使用专属浏览器
 
-为这套工作流使用一个固定的 Chrome 或 Edge 实例及固定 Profile。不要将个人
-日常浏览器 Profile 导出或复制到项目目录。
+为这套工作流只使用项目固定 Chrome 和固定 Profile：主端口是 `9222`，Profile
+目录是仓库内 `runtime\chrome-public-profile`。`9223` 属于其他项目，禁止连接、
+占用或关闭。不要将个人日常浏览器 Profile 导出或复制到项目目录。
 
 专属浏览器需要满足：
 
@@ -789,7 +791,7 @@ Skill 不自带固定平台、品牌和商业结论。每次任务都以你当�
 2. 用户原话与分析结论分开。
 3. 公开昵称只作为线索，不推断真实身份或采购权。
 4. 主证据未取得时写“未评估”，不能写“没有变化”。
-5. 输出六轮状态、覆盖范围、局限和人工待办。
+5. 输出原子任务、实际执行工具、降级记录、覆盖范围、局限和人工待办。
 
 不要私信、评论、关注、购买或修改账号设置。
 ```
@@ -857,7 +859,7 @@ Skill 固定的是抓取、证据和安全工作流，不是平台或问题。�
 - 用户指定的团队或决策者可以采取什么动作。
 - 证据来自哪个页面、内容或评论。
 - 哪些内容是已确认、合理推断或待确认。
-- 本次有哪些页面、评论或轮次没有得到充分评估。
+- 本次有哪些页面、评论或原子需求没有得到充分评估。
 
 只有“执行了哪些工具”，没有真实需求、原话、链接和机会分析的报告不合格。
 
@@ -877,19 +879,12 @@ GitHub。
 │   └── <YYYY-MM-DD>/
 │       └── <task-id>/
 │           ├── task.json
-│           └── rounds/
-│               ├── 01-opencli/
-│               │   └── round_manifest.json
-│               ├── 02-last30days/
-│               │   └── round_manifest.json
-│               ├── 03-last30days-cn/
-│               │   └── round_manifest.json
-│               ├── 04-browser-harness/
-│               │   └── round_manifest.json
-│               ├── 05-scrapling/
-│               │   └── round_manifest.json
-│               └── 06-cloakbrowser/
-│                   └── round_manifest.json
+│           ├── execution_plan.json
+│           └── work-items/
+│               └── <work-id>/
+│                   └── executions/
+│                       └── <attempt-tool>/
+│                           └── execution_manifest.json
 ├── processed/
 │   └── <YYYY-MM-DD>/
 │       └── <task-id>/
@@ -901,18 +896,20 @@ GitHub。
 `task.json` 保存本次研究对象、分析目标、时间范围、业务视角和成功条件。
 它不能从示例任务或上一次运行中静默继承这些字段。
 
-### 9.2 轮次状态
+### 9.2 原子任务和执行状态
 
-每个 `round_manifest.json` 使用以下状态之一：
+每个实际运行的 `execution_manifest.json` 使用以下状态之一；没有被选中的工具
+只保留在计划的排除记录中，不生成执行状态：
 
 | 状态 | 含义 | 你要做什么 |
 | --- | --- | --- |
-| `success` | 该轮证据取得并完成。 | 查看结果。 |
+| `success` | 该次执行取得证据并通过原子需求验收。 | 查看结果。 |
+| `empty_verified` | 正常完成采集并明确证明为 0 条。 | 查看零结果证据。 |
 | `partial_success` | 有证据，但覆盖不完整。 | 阅读局限和恢复条件。 |
 | `awaiting_human` | 等待登录或验证。 | 在浏览器操作后回复“已登录”。 |
 | `blocked_user_action` | 等待其他人工操作。 | 按说明处理。 |
 | `blocked_dependency` | 缺依赖或配置。 | 修复后复检。 |
-| `compliant_skip` | 条件化工具无需运行。 | 不需要处理。 |
+| `unassessed` | 没有取得足够数据，不能判断。 | 查看根因或降级条件。 |
 | `failed` | 限次重试后仍失败。 | 查看错误和恢复条件。 |
 
 ### 9.3 最终校验
@@ -920,14 +917,16 @@ GitHub。
 运行结束前，Skill 会执行：
 
 ```powershell
-python .agents\skills\integrated-scraper\scripts\validate_run.py `
-  --rounds-dir <本次rounds目录> `
+powershell -ExecutionPolicy Bypass -File .agents\skills\integrated-scraper\scripts\invoke_project_python.ps1 `
+  .agents\skills\integrated-scraper\scripts\validate_run.py `
+  --run-dir <本次raw任务目录> `
   --summary <本次summary.json>
 ```
 
 只有校验通过后，才可以把本次运行写成完成。
 
-如果存在部分成功、阻塞或失败轮次，总体状态不能是 `success`。
+总体状态按原子需求验收计算。主工具失败但降级工具通过验收，不会自动拖累总体
+状态；只有部分原子需求完成时总体状态必须是 `partial_success`。
 
 ## 模块十：日常使用、升级和迁移
 
@@ -982,7 +981,7 @@ git pull --ff-only
 1. 重新安装 Codex、Git、Python 和 Node.js。
 2. 重新克隆公开仓库。
 3. 重新安装获准的外部依赖。
-4. 由交付方重新提供或确认 OpenCLI Profile。
+4. 启动项目 Chrome，并将新连接绑定为固定 OpenCLI Profile `integrated-scraper-9222`。
 5. 在新电脑专属浏览器中重新登录任务需要的账号。
 6. 重新运行初始化和全量检查。
 
@@ -1005,7 +1004,7 @@ Python、Node.js、BrowserHarness、Scrapling 或其他用户级 Skill，也不�
 
 - 项目克隆目录。
 - 本机输出目录。
-- `runtime\scrapling-venv`。
+- `runtime\python-env` 和 `runtime\ms-playwright`。
 - 用户级 last30days Skill。
 - 专属浏览器 Profile。
 
@@ -1063,8 +1062,8 @@ npx.cmd skills add ...
 确认：
 
 - OpenCLI 可执行命令或绝对路径真实存在。
-- Profile 名称不是 `replace-with-local-profile`。
-- Profile 名称由获授权交付方提供。
+- 固定 Profile `integrated-scraper-9222` 出现在 `opencli profile list` 中并为 `connected`。
+- 命令显式传入固定 Profile，没有依赖全局默认 Profile。
 - 当前 Windows 用户有权运行该命令。
 
 不要把密码、Cookie 或 Token 添加到项目配置。
@@ -1096,7 +1095,7 @@ browser-harness --doctor
 检查：
 
 ```powershell
-Test-Path .\runtime\scrapling-venv\Scripts\scrapling.exe
+& .\runtime\bin\scrapling-project.cmd --version
 ```
 
 如果返回 `False`，重新执行 Scrapling 隔离环境安装。如果返回 `True`，确认
@@ -1109,12 +1108,13 @@ Test-Path .\runtime\scrapling-venv\Scripts\scrapling.exe
 先运行全量检查：
 
 ```powershell
-python .agents\skills\integrated-scraper\scripts\pack_doctor.py `
+powershell -ExecutionPolicy Bypass -File .agents\skills\integrated-scraper\scripts\invoke_project_python.ps1 `
+  .agents\skills\integrated-scraper\scripts\pack_doctor.py `
   --config .\config\collection.local.json
 ```
 
-如果确实需要更换 Profile、输出目录或可执行文件，让维护人员先备份并检查现有
-配置，再决定是否替换。不要让自动化静默覆盖。
+Profile、主端口和输出目录属于固定运行契约，普通任务不得更换。只有发布新的
+运行契约版本时，维护人员才能修改 `runtime.contract.json` 并同步测试与文档。
 
 ### 11.9 初始化器返回 `invalid_config`
 
@@ -1123,7 +1123,7 @@ python .agents\skills\integrated-scraper\scripts\pack_doctor.py `
 - 配置试图写到项目外的其他路径。
 - JSON 根节点无效。
 - 配置包含 password、cookie、session、token、secret、OTP 或 MFA 等禁止字段。
-- CDP 地址不是本机 HTTP 回环地址。
+- CDP 地址不是固定的 `http://127.0.0.1:9222`，或误用了禁止端口 `9223`。
 
 删除敏感字段并重新预览配置。账号凭据必须留在平台或获授权工具自身的安全
 存储中。
@@ -1143,14 +1143,10 @@ python .agents\skills\integrated-scraper\scripts\pack_doctor.py `
 
 ### 11.11 默认 D 盘不存在
 
-初始化时指定用户文档目录：
-
-```powershell
-$outputRoot = Join-Path $env:USERPROFILE "Documents\integrated-scraper-output"
-```
-
-把 `$outputRoot` 作为 `--output-root` 的值，或在 Codex 初始化对话中明确告诉
-Skill 使用该目录。
+这是固定运行条件不满足，不是可以临时换路径继续执行的警告。由维护人员先创建
+或挂载 D 盘，确认 `D:\integrated-scraper-output` 可写，再重新运行初始化和
+`start_runtime.ps1`。如果产品未来需要支持无 D 盘电脑，应发布新的运行契约
+版本并同步代码、测试和文档，不能只改本机 JSON。
 
 ### 11.12 Git 下载失败
 
@@ -1185,14 +1181,15 @@ git --version
 
 ### 12.2 依赖验收
 
-再确认六轮工作流所需的本机组件和条件化边界都符合契约。
+再确认完整能力库存及条件化边界符合契约。正式任务只要求计划选择的组件就绪。
 
 - [ ] OpenCLI 命令可用。
-- [ ] OpenCLI Profile 名称由交付方确认。
+- [ ] 固定 OpenCLI Profile `integrated-scraper-9222` 已连接。
 - [ ] BrowserHarness Skill 和命令都可用。
 - [ ] last30days Skill 已被发现。
 - [ ] last30days-cn Skill 已被发现。
 - [ ] Scrapling 独立环境可执行文件存在。
+- [ ] Playwright 安装在项目独立 Python 环境，浏览器位于 `runtime\ms-playwright`。
 - [ ] Cloakbrowser 在无触发条件时为 `compliant_skip`。
 - [ ] `pack_doctor.py` 最外层状态为 `success`。
 
@@ -1202,6 +1199,7 @@ git --version
 
 - [ ] 专属浏览器已经绑定。
 - [ ] CDP 只监听本机 `127.0.0.1:9222`。
+- [ ] `9223` 未被本项目连接、占用或关闭。
 - [ ] 任务需要的目标账号由使用者人工登录。
 - [ ] 验证码和 MFA 没有发送给 Codex。
 - [ ] `config\collection.local.json` 不含敏感字段。
@@ -1211,7 +1209,9 @@ git --version
 
 最后使用一次真实任务验证证据、分析和状态闭环。
 
-- [ ] 六轮都产生 `round_manifest.json` 或明确的阻塞记录。
+- [ ] `task.json` 已拆成可独立验收的原子需求。
+- [ ] `execution_plan.json` 已记录全部工具的候选或排除理由、主工具和降级顺序。
+- [ ] 只有实际运行的工具产生 `execution_manifest.json`；未选工具没有阻塞任务。
 - [ ] 报告首先给出真实需求和机会，不是只汇报执行动作。
 - [ ] 每条关键结论有来源、链接、时间、采集器和置信度。
 - [ ] 历史基线和本次新增明确分开。

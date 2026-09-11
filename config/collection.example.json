@@ -1,14 +1,25 @@
 {
+  "runtime_contract": "replace-with-project-root\\runtime.contract.json",
   "output_root": "D:\\integrated-scraper-output",
   "opencli": {
     "command": "opencli",
-    "profile": "replace-with-local-profile"
+    "profile": "integrated-scraper-9222"
   },
   "browser_harness": {
-    "python": "python",
-    "cdp_url": "http://127.0.0.1:9222"
+    "command": "browser-harness",
+    "cdp_url": "http://127.0.0.1:9222",
+    "remote_debugging_port": 9222,
+    "chrome_executable": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+    "user_data_dir": "replace-with-project-root\\runtime\\chrome-public-profile"
+  },
+  "python": {
+    "executable": "replace-with-project-root\\runtime\\python-env\\Scripts\\python.exe",
+    "playwright_browsers_path": "replace-with-project-root\\runtime\\ms-playwright"
   },
   "scrapling": {
-    "executable": "scrapling"
+    "executable": "replace-with-project-root\\runtime\\bin\\scrapling-project.cmd"
+  },
+  "yt_dlp": {
+    "executable": "replace-with-project-root\\runtime\\bin\\yt-dlp.cmd"
   }
 }

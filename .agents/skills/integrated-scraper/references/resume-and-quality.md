@@ -76,13 +76,24 @@ validate_run会重新计算检查结果，不相信手写的ok。数量相等仍
 
 ## 原文文档交付
 
-默认区分业务报告、原文MD和独立执行记录。用户要求不在MD呈现采集失败时，
+分析报告和源数据MD是每次必交付的两份独立文档，执行记录另存。用户要求不在MD呈现采集失败时，
 在对话直接反馈，JSON/TXT保留记录；MD保留必要样本范围，不谎称全量。
 
-原文渲染输入为records数组。每条明确提供include=true、kind（comment/post/danmaku/article）、
+原文渲染输入为本次全部已采内容的records数组，不是分析精选。每条提供kind（comment/post/danmaku/article）、
 platform、source_url、source_file（相对raw任务目录）、source_sha256、captured_at、
 text_original；可选author_public、title、published_raw、context。context只写身份/日期等
-内容边界，不放工具报错。筛选由Agent依据原始记录完成，渲染器不推断需求价值。
+内容边界，不放工具报错。include默认true；仅重复、安全敏感、非内容噪声或删除占位
+可用include=false并填写exclusion_reason为duplicate/sensitive/non_content/removed，
+排除详情保留在JSON。不能因“无价值”、超期或无日期而不归档已经取得的内容。
+
+同一帖子/视频用page_url归组、page_title作标题；评论保留id，有实际父子关系时
+提供parent_id。原始关系未知不得编造。每条只显示类型、作者、发表时间和原文，
+回复标注回复对象；公共说明不逐条重复。采集时间及哈希按源文件集中在文末。
+页面导航、按钮、推荐栏等不混入内容正文；清理仅针对界面噪声，原始文件不改。
+同文不同作者/ID不能因为看起来重复而删除；不同采集快照重复记录须保留排除依据。
+
+源内容清单须逐个核对本次原始文件，记录全部内容（含安全排除项）。渲染器能验证
+清单到文档的一致性，但不能证明上游清单未漏读文件；这一步由Agent复核并记录。
 
 ```powershell
 & ./.agents/skills/integrated-scraper/scripts/invoke_project_python.ps1 -PythonArguments @('.agents/skills/integrated-scraper/scripts/collection_quality.py','render','--input','<已复核原文清单JSON>','--run-dir','<raw任务目录>','--output','<新原文MD>')
@@ -90,6 +101,12 @@ text_original；可选author_public、title、published_raw、context。context�
 
 渲染前检查凭据、签名链接、二维码和无关账号内容。不要把完整运行目录盲目交付。
 脚本检查源文件哈希、路径范围及原文非空，拒绝错误日志、删除占位和覆盖已有文件。
+最终必须以validate_run.py的--final-delivery模式验收，并传入--analysis-report、
+--source-document和--source-records；缺文档、文档相同、源文档与清单不一致均失败。
+旧运行的结构检查仍可不传此开关，但不能将其作为新交付的验收。
+结构检查结果明确返回validation_scope=structure_only、delivery_passed=false；
+只有最终交付模式且全部校验通过才返回delivery_passed=true。
+无内容时同样生成源数据MD，写明无可展示内容，不把采集失败解释为平台零数据。
 原文放入不会执行HTML的代码围栏；本地源链接使用相对路径。归档时一起保留raw与reports
 相对布局；这是文档可移植，不表示其他电脑无需安装依赖。
 

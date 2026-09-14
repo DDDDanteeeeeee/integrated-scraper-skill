@@ -144,12 +144,18 @@ def date_window(published, start, end):
     return 'within_window' if low <= point <= high else 'outside_window'
 
 
-def render_originals(data, run_dir, output):
+def originals_text(data, run_dir, output):
     """Explicit reviewed records; hashes and relative links, no overwriting sources."""
     run_dir, output = Path(run_dir).resolve(), Path(output).resolve()
+    if not isinstance(data, dict) or not isinstance(data.get('records'), list):
+        raise ValueError('Source inventory requires a records array')
     groups = {}
     for row in data['records']:
-        if row.get('include') is not True:
+        if not isinstance(row, dict) or type(row.get('include', True)) is not bool:
+            raise ValueError('Each record must be an object; include must be boolean')
+        if row.get('include', True) is False:
+            if row.get('exclusion_reason') not in ('duplicate', 'sensitive', 'non_content', 'removed'):
+                raise ValueError('Exclusion requires duplicate/sensitive/non_content/removed reason')
             continue
         if row.get('kind') not in ('comment', 'post', 'danmaku', 'article'):
             raise ValueError('Only source content belongs in original-content MD')
@@ -164,28 +170,73 @@ def render_originals(data, run_dir, output):
             raise ValueError('Original text required')
         if row.get('removed') is True:
             raise ValueError('Removed placeholders are not original statements')
-        groups.setdefault(row['platform'], []).append(row)
-    if not groups:
-        raise ValueError('No reviewed content selected')
+        page = public_url(row.get('page_url', row['source_url']))
+        for field in ('platform', 'captured_at'):
+            if not isinstance(row.get(field), str) or not row[field].strip():
+                raise ValueError(f'{field} must be a nonempty string')
+        groups.setdefault((row['platform'], page), []).append(row)
     def inline(value):
         return re.sub(r'[\r\n<>\x60\[\]]', ' ', str(value))
-    lines = ['# 原始内容记录\n\n按来源展示已采原文，不代表全量覆盖。原始日期不补造年份，作者观点不等于已核实事实。\n']
-    for platform, rows in groups.items():
-        lines.append(f'\n## {inline(platform)}\n\n以下保留原文，说明文字与原文分开。\n')
+    count = sum(map(len, groups.values()))
+    lines = [f'# 源数据记录\n\n共 {len(groups)} 个来源页面，{count} 条内容。保留已采原文；不代表平台全量，缺失日期不补造。\n']
+    if not count:
+        lines.append('\n本次没有可展示的源内容；是否为真实零结果以采集验收为准。\n')
+    sources = {}
+    last_platform = None
+    kinds = {'comment': '评论', 'post': '正文', 'article': '正文', 'danmaku': '弹幕'}
+    platform_order = list(dict.fromkeys(platform for platform, page in groups))
+    ordered_groups = sorted(groups, key=lambda key: platform_order.index(key[0]))
+    for platform, page in ordered_groups:
+        rows = groups[(platform, page)]
+        if platform != last_platform:
+            lines.append(f'\n## {inline(platform)}\n')
+            last_platform = platform
+        lines.append(f"\n### {inline(rows[0].get('page_title', rows[0].get('title', '内容页面')))}\n\n[打开原页面](<{page}>)\n")
         for i, row in enumerate(rows, 1):
             link = Path(os.path.relpath(run_dir / row['source_file'], output.parent)).as_posix()
+            key = (link, row['source_sha256'])
+            if key not in sources:
+                sources[key] = {'number': len(sources) + 1, 'times': set()}
+            sources[key]['times'].add(row['captured_at'])
             text = row['text_original']
             fence = chr(96) * max(3, 1 + max([len(m.group()) for m in re.finditer(chr(96)+'+', text)] or [0]))
-            lines.append(f"\n### {i}. {inline(row.get('author_public', row.get('title', '原文')))}\n\n"
-                         f"[来源](<{row['source_url']}>) · 原始时间：{inline(row.get('published_raw', '未提供'))} · "
-                         f"采集时间：{inline(row['captured_at'])}\n\n"
-                         f"{inline(row.get('context', '身份和日期以原记录为准。'))}\n\n"
-                         f"{fence}text\n{text}\n{fence}\n\n"
-                         f"[原始文件](<{link}>) · SHA256：{row['source_sha256']}\n")
+            label = '回复' if row.get('parent_id') else kinds[row['kind']]
+            parent = f" · 回复对象：{inline(row['parent_id'])}" if row.get('parent_id') else ''
+            identifier = f" · ID {inline(row['id'])}" if row.get('id') else ''
+            source_ref = f" · [源{sources[key]['number']}](#source-{sources[key]['number']})"
+            lines.append(f"\n**{label} {i} · {inline(row.get('author_public', '未提供作者'))} · {inline(row.get('published_raw', '日期未提供'))}**{identifier}{parent}{source_ref}\n\n"
+                         f"{fence}text\n{text}\n{fence}\n")
+            if row.get('context'):
+                lines.append(f"\n备注：{inline(row['context'])}\n")
+            if row['source_url'] != page:
+                lines.append(f"\n[原文定位](<{row['source_url']}>)\n")
+    lines.append('\n## 来源文件索引\n\n校验信息集中保留，正文不重复展示。\n')
+    for (link, digest), source in sources.items():
+        lines.append(f"\n<a id=\"source-{source['number']}\"></a>\n\n- [源文件 {source['number']}](<{link}>) · 采集：{inline(', '.join(sorted(source['times'])))}\n  SHA256：{digest}\n")
+    return ''.join(lines), count
+
+
+def render_originals(data, run_dir, output):
+    text, count = originals_text(data, run_dir, output)
+    output = Path(output)
     output.parent.mkdir(parents=True, exist_ok=True)
     with output.open('x', encoding='utf-8') as stream:
-        stream.write(''.join(lines))
-    return {'records': sum(map(len, groups.values())), 'output': str(output)}
+        stream.write(text)
+    return {'records': count, 'output': str(output)}
+
+
+def validate_documents(records_path, run_dir, report, source_document):
+    report, source_document = Path(report).resolve(), Path(source_document).resolve()
+    if report == source_document:
+        raise ValueError('Analysis and source documents must be separate files')
+    for path in (report, source_document):
+        if path.suffix.lower() != '.md' or not path.is_file() or not path.read_text(encoding='utf-8-sig').strip():
+            raise ValueError('Both nonempty Markdown deliverables are required')
+    data = json.loads(Path(records_path).read_text(encoding='utf-8-sig'))
+    expected, count = originals_text(data, run_dir, source_document)
+    if source_document.read_text(encoding='utf-8-sig') != expected:
+        raise ValueError('Source document differs from complete supplied content inventory')
+    return count
 
 
 def main():

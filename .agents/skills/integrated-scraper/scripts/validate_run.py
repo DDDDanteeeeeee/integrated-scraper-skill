@@ -359,13 +359,24 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run-dir", required=True, type=Path)
     parser.add_argument("--summary", required=True, type=Path)
+    parser.add_argument("--final-delivery", action="store_true")
+    parser.add_argument("--analysis-report", type=Path)
+    parser.add_argument("--source-document", type=Path)
+    parser.add_argument("--source-records", type=Path)
     parser.add_argument("--max-attempts-per-tool", type=int, help="只允许收紧默认的首次执行加两次恢复")
     args = parser.parse_args()
     try:
         errors = validate(args.run_dir, args.summary, args.max_attempts_per_tool)
+        if args.final_delivery:
+            if not all((args.analysis_report, args.source_document, args.source_records)):
+                errors.append('Final delivery requires analysis report, source document and source records')
+            else:
+                sibling('collection_quality').validate_documents(args.source_records, args.run_dir, args.analysis_report, args.source_document)
     except (ValueError, TypeError, KeyError, OSError) as error:
         errors = [f"无效运行记录：{error}"]
-    print(json.dumps({"ok": not errors, "errors": errors}, ensure_ascii=False))
+    print(json.dumps({"ok": not errors, "errors": errors,
+                      "validation_scope": "final_delivery" if args.final_delivery else "structure_only",
+                      "delivery_passed": args.final_delivery and not errors}, ensure_ascii=False))
     return 0 if not errors else 1
 
 

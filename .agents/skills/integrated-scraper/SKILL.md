@@ -150,6 +150,12 @@ Python 代码需要控制项目 Chrome 时，必须在 `invoke_project_python.ps
 
 ## 分析、报告与验收
 
+每次交付必须同时提供两份独立文件：分析报告.md 和源数据.md，不能以原始JSON、
+链接清单或报告中的精选引文代替源数据文档。源数据涵盖本次已采正文、评论、
+楼中楼、弹幕等内容；不因缺少分析价值、时间较旧或日期待确认而静默删去。
+排版按平台和来源页面分组，原文不润色；重复免责声明只在文首说明一次，
+采集时间、文件路径和SHA256集中到文末索引。具体记录规范见下方引用。
+
 评论采集和原文文档交付须读取 [续跑与内容验收](references/resume-and-quality.md)，
 使用 `collection_quality.py` 做格式解析、数量核对与原文渲染。新评论采集尝试
 保存数量检查输入并通过 `result.collection_check.evidence_id` 接入验收；不得
@@ -180,7 +186,7 @@ Python 代码需要控制项目 Chrome 时，必须在 `invoke_project_python.ps
 运行结束前执行：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .agents/skills/integrated-scraper/scripts/invoke_project_python.ps1 .agents/skills/integrated-scraper/scripts/validate_run.py --run-dir <本次raw任务目录> --summary <summary.json>
+& ./.agents/skills/integrated-scraper/scripts/invoke_project_python.ps1 -PythonArguments @('.agents/skills/integrated-scraper/scripts/validate_run.py','--run-dir','<本次raw任务目录>','--summary','<summary.json>','--final-delivery','--analysis-report','<分析报告.md>','--source-document','<源数据.md>','--source-records','<源内容清单.json>')
 ```
 
 校验未通过不得声明完成。不得自动发布、私信、评论、关注、购买、修改账号、

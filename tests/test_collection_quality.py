@@ -100,6 +100,56 @@ class QualityTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     q.render_originals({'records': [dict(row, **patch)]}, source.parent, root/'bad.md')
 
+    def test_compact_sources_and_complete_delivery(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            raw = root / 'raw.json'; raw.write_text('source', encoding='utf-8')
+            base = dict(self.row(), kind='comment', platform='Example', source_file='raw.json',
+                        source_sha256=hashlib.sha256(raw.read_bytes()).hexdigest(),
+                        captured_at='2026-09-14', page_url='https://example.org/post', page_title='测试帖子')
+            rows = [base, dict(base, id='2', parent_id='1', text_original='回复原话')]
+            data = {'records': rows}
+            inventory = root/'records.json'; inventory.write_text(json.dumps(data), encoding='utf-8')
+            doc = root/'source.md'; q.render_originals(data, root, doc)
+            text = doc.read_text(encoding='utf-8')
+            self.assertEqual(text.count('SHA256：'), 1)
+            self.assertEqual(text.count('### 测试帖子'), 1)
+            self.assertIn('回复对象：1', text)
+            self.assertIn('回复原话', text)
+            report = root/'report.md'
+            with self.assertRaises(ValueError):
+                q.validate_documents(inventory, root, report, doc)
+            report.write_text('# 分析报告', encoding='utf-8')
+            self.assertEqual(q.validate_documents(inventory, root, report, doc), 2)
+            with self.assertRaises(ValueError):
+                q.validate_documents(inventory, root, doc, doc)
+            doc.write_text(text.replace('回复原话', ''), encoding='utf-8')
+            with self.assertRaises(ValueError):
+                q.validate_documents(inventory, root, report, doc)
+            with self.assertRaises(ValueError):
+                q.originals_text({'records': [dict(base, include=False, exclusion_reason='no_value')]}, root, doc)
+
+    def test_empty_source_document_is_explicit(self):
+        text, count = q.originals_text({'records': []}, Path.cwd(), Path.cwd()/'empty.md')
+        self.assertEqual(count, 0)
+        self.assertIn('没有可展示的源内容', text)
+
+    def test_interleaved_platforms_and_source_mapping(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            raw = root/'raw.txt'; raw.write_text('source', encoding='utf-8')
+            base = dict(self.row(), kind='comment', platform='A', source_file='raw.txt',
+                        source_sha256=hashlib.sha256(raw.read_bytes()).hexdigest(), captured_at='2026-09-14')
+            rows = [base, dict(base, platform='B'), dict(base, source_url='https://example.org/second')]
+            text, count = q.originals_text({'records': rows}, root, root/'data.md')
+            self.assertEqual(count, 3)
+            self.assertEqual(text.count('## A\n'), 1)
+            self.assertEqual(text.count('[源1](#source-1)'), 3)
+            self.assertEqual(text.count('SHA256：'), 1)
+            for data in ({'records': {}}, {'records': [None]}, {'records': [dict(base, include='false')]}):
+                with self.assertRaises(ValueError):
+                    q.originals_text(data, root, root/'bad.md')
+
 
 if __name__ == '__main__':
     unittest.main()

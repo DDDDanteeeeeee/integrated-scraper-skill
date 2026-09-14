@@ -4,11 +4,44 @@ import hashlib
 from pathlib import Path
 import tempfile
 import unittest
+import subprocess
+import sys
 import test_scripts as fixtures
 from test_scripts import validator, planner, atomic_task, pack_doctor, ROOT
 
 
 class AcceptanceRegressionTests(unittest.TestCase):
+    def test_final_delivery_cli_gate(self):
+        self.make()
+        command = [sys.executable, '-X', 'utf8', str(ROOT / '.agents/skills/integrated-scraper/scripts/validate_run.py'),
+                   '--run-dir', str(self.root), '--summary', str(self.root/'summary.json')]
+        def invoke(extra):
+            result = subprocess.run(command + extra, capture_output=True, text=True, encoding='utf-8', check=False)
+            return result.returncode, json.loads(result.stdout)
+        code, result = invoke([])
+        self.assertEqual(code, 0)
+        self.assertFalse(result['delivery_passed'])
+        code, result = invoke(['--final-delivery'])
+        self.assertNotEqual(code, 0)
+        source = self.root/'work-items/W1/executions/01-scrapling/source.txt'
+        row = {'kind': 'article', 'platform': 'Example', 'source_url': 'https://example.org/',
+               'source_file': str(source.relative_to(self.root)),
+               'source_sha256': hashlib.sha256(source.read_bytes()).hexdigest(),
+               'captured_at': '2026-09-14', 'text_original': source.read_text(encoding='utf-8')}
+        inventory = self.root/'records.json'
+        inventory.write_text(json.dumps({'records': [row]}), encoding='utf-8')
+        report, doc = self.root/'analysis.md', self.root/'source.md'
+        report.write_text('# Analysis\n\nSynthetic fixture findings.', encoding='utf-8')
+        validator.sibling('collection_quality').render_originals({'records': [row]}, self.root, doc)
+        extra = ['--final-delivery', '--analysis-report', str(report), '--source-document', str(doc), '--source-records', str(inventory)]
+        code, result = invoke(extra)
+        self.assertEqual(code, 0, result)
+        self.assertTrue(result['delivery_passed'])
+        doc.write_text('# Truncated', encoding='utf-8')
+        code, result = invoke(extra)
+        self.assertNotEqual(code, 0)
+        self.assertFalse(result['delivery_passed'])
+
     def test_collection_check_recomputed_not_trusted(self):
         self.make()
         source = self.root / 'work-items/W1/executions/01-scrapling/source.txt'
